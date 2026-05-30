@@ -14,7 +14,8 @@ public sealed class RunCommand
     public int Execute(RunOptions options)
     {
         var razorPath = options.RazorFile;
-        var scaffoldDir = Path.Combine(Path.GetDirectoryName(razorPath)!, ".minblazor");
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var scaffoldDir = Path.Combine(sourceDir, ".minblazor");
 
         if (options.Clean && Directory.Exists(scaffoldDir))
         {
@@ -22,12 +23,12 @@ public sealed class RunCommand
             Directory.Delete(scaffoldDir, recursive: true);
         }
 
-        var component = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var entryComponent = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
 
         _output.Info($"running {Path.GetFileName(razorPath)} on http://localhost:{options.Port}");
 
         new Scaffolder(AppInfo.BlazorPackageVersion)
-            .Create(scaffoldDir, razorPath, component, options.Port);
+            .Create(scaffoldDir, sourceDir, entryComponent, options.Port);
 
         return Serve(scaffoldDir, options.OpenBrowser);
     }

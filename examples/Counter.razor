@@ -1,0 +1,10 @@
+<p>Count: <strong>@count</strong></p>
+<button @onclick="() => count++">Increment</button>
+
+@code {
+    [Parameter] public int Start { get; set; }
+
+    int count;
+
+    protected override void OnInitialized() => count = Start;
+}
