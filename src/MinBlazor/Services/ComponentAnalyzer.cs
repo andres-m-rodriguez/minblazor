@@ -1,9 +1,13 @@
+using MinBlazor.Models;
+
 namespace MinBlazor.Services;
 
 public sealed class ComponentAnalyzer
 {
     private const string ImportsFile = "_Imports.razor";
     private const string ScaffoldFolder = ".minblazor";
+
+    private readonly ComponentParser _parser = new();
 
     public ComponentGraph Analyze(string entryPath, string rootDir)
     {
@@ -24,7 +28,8 @@ public sealed class ComponentAnalyzer
             var node = queue.Dequeue();
             var used = new List<string>();
 
-            foreach (var name in FindReferences(File.ReadAllText(node.FilePath)))
+            var parsed = _parser.Parse(File.ReadAllText(node.FilePath));
+            foreach (var name in ReferencedNames(parsed))
             {
                 if (name == node.Name || !index.TryGetValue(name, out var target))
                     continue;
@@ -63,27 +68,15 @@ public sealed class ComponentAnalyzer
         return index;
     }
 
-    private static IEnumerable<string> FindReferences(string content)
+    private static IEnumerable<string> ReferencedNames(IReadOnlyList<Component> components)
     {
-        var names = new HashSet<string>(StringComparer.Ordinal);
-
-        for (int i = 0; i + 1 < content.Length; i++)
+        foreach (var component in components)
         {
-            if (content[i] != '<' || !char.IsAsciiLetterUpper(content[i + 1]))
-                continue;
+            yield return component.Name;
 
-            int start = i + 1;
-            int end = start;
-            while (
-                end < content.Length && (char.IsLetterOrDigit(content[end]) || content[end] == '_')
-            )
-                end++;
-
-            names.Add(content[start..end]);
-            i = end;
+            foreach (var nested in ReferencedNames(component.Components))
+                yield return nested;
         }
-
-        return names;
     }
 
     private static bool IsImports(string path) =>
