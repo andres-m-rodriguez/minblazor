@@ -1,0 +1,12 @@
+@page "/"
+
+<h1>Hello from minblazor</h1>
+
+<p>Count: <strong>@count</strong></p>
+
+<button @onclick="() => count++">Increment</button>
+<button @onclick="() => count = 0">Reset</button>
+
+@code {
+    int count = 0;
+}
