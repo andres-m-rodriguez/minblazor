@@ -23,12 +23,12 @@ public sealed class RunCommand
             Directory.Delete(scaffoldDir, recursive: true);
         }
 
-        var entryComponent = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
-
         _output.Info($"running {Path.GetFileName(razorPath)} on http://localhost:{options.Port}");
 
-        new Scaffolder(AppInfo.BlazorPackageVersion)
-            .Create(scaffoldDir, sourceDir, entryComponent, options.Port);
+        var graph = new Scaffolder(AppInfo.BlazorPackageVersion)
+            .Create(scaffoldDir, sourceDir, razorPath, options.Port);
+
+        _output.Info($"components: {string.Join(", ", graph.Nodes.Select(n => n.RelativePath))}");
 
         return Serve(scaffoldDir, options.OpenBrowser);
     }

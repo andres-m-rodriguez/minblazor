@@ -48,16 +48,27 @@ internal static class ScaffoldTemplates
         }
         """;
 
-    public const string Imports = """
-        @using System.Net.Http
-        @using System.Net.Http.Json
-        @using Microsoft.AspNetCore.Components.Forms
-        @using Microsoft.AspNetCore.Components.Routing
-        @using Microsoft.AspNetCore.Components.Web
-        @using Microsoft.AspNetCore.Components.WebAssembly.Http
-        @using Microsoft.JSInterop
-        @using MinBlazorApp
-        """;
+    private static readonly string[] BaseUsings =
+    [
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "Microsoft.AspNetCore.Components.Forms",
+        "Microsoft.AspNetCore.Components.Routing",
+        "Microsoft.AspNetCore.Components.Web",
+        "Microsoft.AspNetCore.Components.WebAssembly.Http",
+        "Microsoft.JSInterop",
+        RootNamespace,
+    ];
+
+    public static string Imports(IEnumerable<string> folderNamespaces)
+    {
+        var usings = BaseUsings
+            .Concat(folderNamespaces)
+            .Distinct()
+            .Select(ns => $"@using {ns}");
+
+        return string.Join('\n', usings) + "\n";
+    }
 
     public const string IndexHtml = """
         <!DOCTYPE html>
