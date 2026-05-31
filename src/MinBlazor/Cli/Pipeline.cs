@@ -8,17 +8,58 @@ using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
+public sealed record Compiled(Compilation Compilation, BuildScript? Script, IReadOnlyList<Diagnostic> Diagnostics);
+
 public sealed class Pipeline
 {
     private readonly IOutput _output;
 
     public Pipeline(IOutput output) => _output = output;
 
-    // Compiles the entry and its dependency closure, runs Build.cs, and writes the
-    // scaffold project. Returns the scaffold directory, ready to build or serve.
-    public Result<string> Prepare(string razorPath, bool clean)
+    // Indexes the folder, runs Build.cs BeforeCompile, and compiles the entry and its
+    // dependency closure. No scaffold is written and dotnet is not invoked.
+    public Result<Compiled> Compile(string razorPath, string scaffoldDir)
     {
         var sourceDir = Path.GetDirectoryName(razorPath)!;
+
+        var entrySource = File.ReadAllText(razorPath);
+        var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+
+        var registry = new ComponentRegistry();
+        var indexed = FolderIndexer.Index(sourceDir, registry);
+        if (!indexed.IsSuccess)
+            return Result<Compiled>.Fail(indexed.Error!);
+
+        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, _output.Info);
+        if (!scriptResult.IsSuccess)
+            return Result<Compiled>.Fail(scriptResult.Error!);
+
+        var script = scriptResult.Value;
+
+        if (script is not null)
+        {
+            var before = script.RunBeforeCompile();
+            if (!before.IsSuccess)
+                return Result<Compiled>.Fail(before.Error!);
+
+            foreach (var component in script.Outputs.Components)
+            {
+                var added = registry.Add(component.Name, component.Source);
+                if (!added.IsSuccess)
+                    return Result<Compiled>.Fail(added.Error!);
+            }
+        }
+
+        var diagnostics = new Diagnostics();
+        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
+
+        return Result<Compiled>.Ok(new Compiled(compilation, script, diagnostics.Items));
+    }
+
+    // Compiles, runs Build.cs AfterCompile, and writes the scaffold project. Returns the
+    // scaffold directory, ready to build or serve.
+    public Result<string> Prepare(string razorPath, bool clean)
+    {
         var scaffoldDir = CacheDirectory(razorPath);
 
         if (clean && Directory.Exists(scaffoldDir))
@@ -27,60 +68,36 @@ public sealed class Pipeline
             Directory.Delete(scaffoldDir, recursive: true);
         }
 
-        var entrySource = File.ReadAllText(razorPath);
-        var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var compiled = Compile(razorPath, scaffoldDir);
+        if (!compiled.IsSuccess)
+            return Result<string>.Fail(compiled.Error!);
 
-        var registry = new ComponentRegistry();
-        var indexed = FolderIndexer.Index(sourceDir, registry);
-        if (!indexed.IsSuccess)
-            return Result<string>.Fail(indexed.Error!);
+        var result = compiled.Value!;
 
-        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, _output.Info);
-        if (!scriptResult.IsSuccess)
-            return Result<string>.Fail(scriptResult.Error!);
-
-        var script = scriptResult.Value;
-
-        if (script is not null)
-        {
-            var before = script.RunBeforeCompile();
-            if (!before.IsSuccess)
-                return Result<string>.Fail(before.Error!);
-
-            foreach (var component in script.Outputs.Components)
-            {
-                var added = registry.Add(component.Name, component.Source);
-                if (!added.IsSuccess)
-                    return Result<string>.Fail(added.Error!);
-            }
-        }
-
-        var diagnostics = new Diagnostics();
-        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
-
-        foreach (var diagnostic in diagnostics.Items)
+        foreach (var diagnostic in result.Diagnostics)
             _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
 
-        if (script is not null)
+        if (result.Script is not null)
         {
-            var after = script.RunAfterCompile(BuildInfo(compilation));
+            var after = result.Script.RunAfterCompile(BuildInfo(result.Compilation));
             if (!after.IsSuccess)
                 return Result<string>.Fail(after.Error!);
 
-            var duplicate = script
-                .Outputs.Sources.GroupBy(source => source.FileName, StringComparer.OrdinalIgnoreCase)
+            var duplicate = result
+                .Script.Outputs.Sources.GroupBy(source => source.FileName, StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault(group => group.Count() > 1);
 
             if (duplicate is not null)
                 return Result<string>.Fail($"Two build source files are named '{duplicate.Key}'. Source file names must be unique.");
         }
 
-        new Scaffold().Write(scaffoldDir, sourceDir, compilation, AppInfo.DefaultPort, script?.Outputs);
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        new Scaffold().Write(scaffoldDir, sourceDir, result.Compilation, AppInfo.DefaultPort, result.Script?.Outputs);
 
         return Result<string>.Ok(scaffoldDir);
     }
 
-    private static string CacheDirectory(string razorPath)
+    public static string CacheDirectory(string razorPath)
     {
         var path = Path.GetFullPath(razorPath);
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16].ToLowerInvariant();

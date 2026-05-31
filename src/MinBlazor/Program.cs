@@ -26,6 +26,9 @@ switch (parsed.Value)
     case CliCommand.Build build:
         return new BuildCommand(output).Execute(build.Options);
 
+    case CliCommand.Graph graph:
+        return new GraphCommand(output).Execute(graph.Options);
+
     default:
         return 1;
 }
