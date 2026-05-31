@@ -10,10 +10,14 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>minblazor</ToolCommandName>
     <PackageId>MinBlazor</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.3.2</Version>
     <Authors>andresitomanuel</Authors>
     <Description>Run a single .razor file as a Blazor WebAssembly app.</Description>
     <PackageOutputPath>$(MSBuildThisFileDirectory)../../nupkg</PackageOutputPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MinBlazor.Razor\MinBlazor.Razor.csproj" />
+  </ItemGroup>
 
 </Project>

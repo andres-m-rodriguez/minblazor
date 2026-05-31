@@ -1,4 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
 using MinBlazor.Models;
+using MinBlazor.Razor;
 using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
@@ -14,22 +17,36 @@ public sealed class RunCommand
     public int Execute(RunOptions options)
     {
         var razorPath = options.RazorFile;
-        var scaffoldDir = Path.Combine(Path.GetDirectoryName(razorPath)!, ".minblazor");
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var scaffoldDir = CacheDirectory(razorPath);
 
         if (options.Clean && Directory.Exists(scaffoldDir))
         {
-            _output.Info("Cleaning .minblazor");
+            _output.Info("Cleaning cache");
             Directory.Delete(scaffoldDir, recursive: true);
         }
 
-        var component = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
-
         _output.Info($"running {Path.GetFileName(razorPath)} on http://localhost:{options.Port}");
 
-        new Scaffolder(AppInfo.BlazorPackageVersion)
-            .Create(scaffoldDir, razorPath, component, options.Port);
+        var entrySource = File.ReadAllText(razorPath);
+        var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var resolver = new FolderResolver(sourceDir);
+        var diagnostics = new Diagnostics();
+        var compilation = new Compiler(resolver, diagnostics).Compile(entryName, entrySource);
+
+        foreach (var diagnostic in diagnostics.Items)
+            _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
+
+        new Scaffold().Write(scaffoldDir, sourceDir, compilation, options.Port);
 
         return Serve(scaffoldDir, options.OpenBrowser);
+    }
+
+    private static string CacheDirectory(string razorPath)
+    {
+        var path = Path.GetFullPath(razorPath);
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16].ToLowerInvariant();
+        return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
 
     private int Serve(string scaffoldDir, bool openBrowser)

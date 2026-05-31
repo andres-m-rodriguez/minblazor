@@ -1,12 +1,12 @@
+#:package Humanizer@2.14.1
 @page "/"
+@inject IGreeter Greeter
 
-<h1>Hello from minblazor</h1>
+<script @hostTag src="https://cdn.tailwindcss.com"></script>
 
-<p>Count: <strong>@count</strong></p>
+<h1>@Greeter.Greet("minblazor")</h1>
 
-<button @onclick="() => count++">Increment</button>
-<button @onclick="() => count = 0">Reset</button>
-
-@code {
-    int count = 0;
-}
+<Card>
+    <Counter />
+    <Counter Start="10" />
+</Card>

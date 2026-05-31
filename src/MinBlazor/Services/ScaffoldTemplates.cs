@@ -1,63 +1,91 @@
+using MinBlazor.Razor.Models;
+
 namespace MinBlazor.Services;
 
 internal static class ScaffoldTemplates
 {
     public const string RootNamespace = "MinBlazorApp";
 
-    public static string Csproj(string packageVersion) => $"""
-        <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+    public const string HeadPlaceholder = "<!--minblazor:head-->";
 
-          <PropertyGroup>
-            <TargetFramework>net10.0</TargetFramework>
-            <Nullable>enable</Nullable>
-            <ImplicitUsings>enable</ImplicitUsings>
-            <RootNamespace>{RootNamespace}</RootNamespace>
-            <NoWarn>$(NoWarn);CS1998</NoWarn>
-          </PropertyGroup>
+    public static string Csproj(string packageVersion, IEnumerable<PackageReference> packages)
+    {
+        var userPackages = string.Concat(
+            packages.Select(package =>
+                package.Version is null
+                    ? $"\n    <PackageReference Include=\"{package.Name}\" />"
+                    : $"\n    <PackageReference Include=\"{package.Name}\" Version=\"{package.Version}\" />"));
 
-          <ItemGroup>
-            <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{packageVersion}" />
-            <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="{packageVersion}" PrivateAssets="all" />
-          </ItemGroup>
+        return $"""
+            <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
-        </Project>
-        """;
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <Nullable>enable</Nullable>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <RootNamespace>{RootNamespace}</RootNamespace>
+                <NoWarn>$(NoWarn);CS1998</NoWarn>
+              </PropertyGroup>
 
-    public static string Program(string componentName) => $$"""
-        using Microsoft.AspNetCore.Components.Web;
-        using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+              <ItemGroup>
+                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{packageVersion}" />
+                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="{packageVersion}" PrivateAssets="all" />{userPackages}
+              </ItemGroup>
 
-        var builder = WebAssemblyHostBuilder.CreateDefault(args);
-        builder.RootComponents.Add<global::{{RootNamespace}}.{{componentName}}>("#app");
-        builder.RootComponents.Add<HeadOutlet>("head::after");
-        await builder.Build().RunAsync();
-        """;
+            </Project>
+            """;
+    }
 
-    public static string LaunchSettings(int port) => $$"""
-        {
-          "profiles": {
-            "minblazor": {
-              "commandName": "Project",
-              "launchBrowser": false,
-              "applicationUrl": "http://localhost:{{port}}",
-              "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+    public static string Program(string componentName, bool hasDependencies)
+    {
+        var usings = hasDependencies ? $"\nusing {RootNamespace};" : "";
+        var configure = hasDependencies ? "\nDependencies.Configure(builder.Services);" : "";
+
+        return $$"""
+            using Microsoft.AspNetCore.Components.Web;
+            using Microsoft.AspNetCore.Components.WebAssembly.Hosting;{{usings}}
+
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            builder.RootComponents.Add<global::{{RootNamespace}}.{{componentName}}>("#app");
+            builder.RootComponents.Add<HeadOutlet>("head::after");{{configure}}
+            await builder.Build().RunAsync();
+            """;
+    }
+
+    public static string LaunchSettings(int port) =>
+        $$"""
+            {
+              "profiles": {
+                "minblazor": {
+                  "commandName": "Project",
+                  "launchBrowser": false,
+                  "applicationUrl": "http://localhost:{{port}}",
+                  "environmentVariables": {
+                    "ASPNETCORE_ENVIRONMENT": "Development"
+                  }
+                }
               }
             }
-          }
-        }
-        """;
+            """;
 
-    public const string Imports = """
-        @using System.Net.Http
-        @using System.Net.Http.Json
-        @using Microsoft.AspNetCore.Components.Forms
-        @using Microsoft.AspNetCore.Components.Routing
-        @using Microsoft.AspNetCore.Components.Web
-        @using Microsoft.AspNetCore.Components.WebAssembly.Http
-        @using Microsoft.JSInterop
-        @using MinBlazorApp
-        """;
+    private static readonly string[] BaseUsings =
+    [
+        "System.Net.Http",
+        "System.Net.Http.Json",
+        "Microsoft.AspNetCore.Components.Forms",
+        "Microsoft.AspNetCore.Components.Routing",
+        "Microsoft.AspNetCore.Components.Web",
+        "Microsoft.AspNetCore.Components.WebAssembly.Http",
+        "Microsoft.JSInterop",
+        RootNamespace,
+    ];
+
+    public static string Imports(IEnumerable<string> folderNamespaces)
+    {
+        var usings = BaseUsings.Concat(folderNamespaces).Distinct().Select(ns => $"@using {ns}");
+
+        return string.Join('\n', usings) + "\n";
+    }
 
     public const string IndexHtml = """
         <!DOCTYPE html>
@@ -78,6 +106,7 @@ internal static class ScaffoldTemplates
                 }
                 #blazor-error-ui .reload { color: #fff; text-decoration: underline; }
             </style>
+            <!--minblazor:head-->
         </head>
 
         <body>

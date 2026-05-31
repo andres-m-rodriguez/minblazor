@@ -1,0 +1,7 @@
+<div style="border: 1px solid #ccc; border-radius: 8px; padding: 1rem; margin: .5rem 0;">
+    @ChildContent
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}
