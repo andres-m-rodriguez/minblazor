@@ -88,6 +88,31 @@ public class BuildScriptTests
         await Assert.That(logs.Any(line => line.Contains("BeforeCompile"))).IsTrue();
     }
 
+    [Test]
+    public async Task AddSourceDirectory_IncludesNestedCsFiles()
+    {
+        var dir = NewDir();
+        Directory.CreateDirectory(Path.Combine(dir, "Models", "Sub"));
+        File.WriteAllText(Path.Combine(dir, "Models", "Foo.cs"), "namespace X; public class Foo { }");
+        File.WriteAllText(Path.Combine(dir, "Models", "Sub", "Bar.cs"), "namespace X; public class Bar { }");
+        File.WriteAllText(Path.Combine(dir, BuildScript.FileName), """
+            using MinBlazor.Build;
+
+            public static class Build
+            {
+                public static void BeforeCompile(BuildContext ctx) => ctx.AddSourceDirectory("Models");
+            }
+            """);
+
+        var script = BuildScript.Load(dir, dir, _ => { }).Value!;
+        await Assert.That(script.RunBeforeCompile().IsSuccess).IsTrue();
+
+        var names = script.Outputs.Sources.Select(source => source.FileName).ToHashSet();
+        await Assert.That(names.Count).IsEqualTo(2);
+        await Assert.That(names.Contains("Foo.cs")).IsTrue();
+        await Assert.That(names.Contains("Bar.cs")).IsTrue();
+    }
+
     private static string NewDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), "minblazor-tests", Guid.NewGuid().ToString("n"));

@@ -6,6 +6,7 @@ public static class Build
     {
         ctx.AddOption("BuildStamp", "demo");
         ctx.AddStaticAsset("build/info.txt", "generated at build time");
+        ctx.AddSourceDirectory("Models");
     }
 
     public static void AfterCompile(BuildContext ctx)

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using MinBlazor.Build.Models;
 using MinBlazor.Razor.Models;
@@ -52,6 +53,14 @@ public sealed class BuildContext
 
     public void AddSource(string fileName, string code) =>
         _outputs.Sources.Add(new BuildSource(fileName, code));
+
+    public void AddSourceDirectory(string path)
+    {
+        var directory = Path.IsPathRooted(path) ? path : Path.Combine(SourceDirectory, path);
+
+        foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+            _outputs.Sources.Add(new BuildSource(Path.GetFileName(file), File.ReadAllText(file)));
+    }
 
     public void AddOption(string name, string value) => _outputs.Options[name] = value;
 

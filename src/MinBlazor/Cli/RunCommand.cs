@@ -82,6 +82,16 @@ public sealed class RunCommand
                 _output.Error(after.Error!);
                 return 1;
             }
+
+            var duplicate = script
+                .Outputs.Sources.GroupBy(source => source.FileName, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault(group => group.Count() > 1);
+
+            if (duplicate is not null)
+            {
+                _output.Error($"Two build source files are named '{duplicate.Key}'. Source file names must be unique.");
+                return 1;
+            }
         }
 
         new Scaffold().Write(scaffoldDir, sourceDir, compilation, options.Port, script?.Outputs);
