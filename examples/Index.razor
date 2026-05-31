@@ -1,6 +1,10 @@
+#:package Humanizer@2.14.1
 @page "/"
+@inject IGreeter Greeter
 
-<h1>Hello from minblazor</h1>
+<script @hostTag src="https://cdn.tailwindcss.com"></script>
+
+<h1>@Greeter.Greet("minblazor")</h1>
 
 <Card>
     <Counter />

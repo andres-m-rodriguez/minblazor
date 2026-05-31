@@ -52,9 +52,7 @@ public sealed class DevServer : IDisposable
             if (_started && !_process.HasExited)
                 _process.Kill(entireProcessTree: true);
         }
-        catch
-        {
-        }
+        catch { }
     }
 
     public int WaitForExit()
