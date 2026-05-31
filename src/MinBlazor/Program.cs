@@ -23,6 +23,9 @@ switch (parsed.Value)
     case CliCommand.Run run:
         return new RunCommand(output).Execute(run.Options);
 
+    case CliCommand.Build build:
+        return new BuildCommand(output).Execute(build.Options);
+
     default:
         return 1;
 }

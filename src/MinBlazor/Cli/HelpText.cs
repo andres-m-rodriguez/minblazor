@@ -8,12 +8,13 @@ internal static class HelpText
         minblazor - run a single .razor file as a Blazor WebAssembly app.
 
         Usage:
-          minblazor run <file.razor> [options]
+          minblazor run <file.razor> [options]      Build and serve with a dev server
+          minblazor build <file.razor> [options]    Build only, no server
 
         Options:
-          -p, --port <n>   Port to serve on (default 5005)
-              --no-open    Don't open the browser
-              --clean      Delete the .minblazor folder before running
+          -p, --port <n>   Port to serve on (default 5005)   (run only)
+              --no-open    Don't open the browser             (run only)
+              --clean      Delete the build cache first
           -h, --help       Show help
           -v, --version    Show version
         """;

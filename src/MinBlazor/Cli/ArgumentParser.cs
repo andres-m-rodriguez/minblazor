@@ -14,8 +14,45 @@ public static class ArgumentParser
             "--help" or "-h" or "help" => Ok(new CliCommand.ShowHelp()),
             "--version" or "-v" => Ok(new CliCommand.ShowVersion()),
             "run" => ParseRun(args),
+            "build" => ParseBuild(args),
             var other => Fail($"Unknown command '{other}'. Try 'minblazor --help'."),
         };
+    }
+
+    private static Result<CliCommand> ParseBuild(string[] args)
+    {
+        string? file = null;
+        bool clean = false;
+
+        for (int i = 1; i < args.Length; i++)
+        {
+            var arg = args[i];
+            switch (arg)
+            {
+                case "--clean":
+                    clean = true;
+                    break;
+
+                default:
+                    if (arg.StartsWith('-'))
+                        return Fail($"Unknown option '{arg}'.");
+                    if (file is not null)
+                        return Fail("Only one .razor file can be built at a time.");
+                    file = arg;
+                    break;
+            }
+        }
+
+        if (file is null)
+            return Fail("No .razor file given. Usage: minblazor build Index.razor");
+
+        var razorPath = Path.GetFullPath(file);
+        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        if (!File.Exists(razorPath))
+            return Fail($"File not found: {razorPath}");
+
+        return Ok(new CliCommand.Build(new BuildOptions { RazorFile = razorPath, Clean = clean }));
     }
 
     private static Result<CliCommand> ParseRun(string[] args)
