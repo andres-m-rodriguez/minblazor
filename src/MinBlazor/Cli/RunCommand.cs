@@ -30,9 +30,20 @@ public sealed class RunCommand
 
         var entrySource = File.ReadAllText(razorPath);
         var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
-        var resolver = new FolderResolver(sourceDir);
+
+        var registry = new ComponentRegistry();
+        try
+        {
+            FolderIndexer.Index(sourceDir, registry);
+        }
+        catch (DuplicateComponentException ex)
+        {
+            _output.Error(ex.Message);
+            return 1;
+        }
+
         var diagnostics = new Diagnostics();
-        var compilation = new Compiler(resolver, diagnostics).Compile(entryName, entrySource);
+        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
 
         foreach (var diagnostic in diagnostics.Items)
             _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
