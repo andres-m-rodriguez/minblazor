@@ -44,30 +44,32 @@ public sealed class GraphCommand
             return 0;
         }
 
-        foreach (var diagnostic in compiled.Value!.Diagnostics)
-            _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
-
         _output.Info(root.Name);
         PrintChildren(root, "");
         return 0;
     }
 
-    // name -> the components it references, for every resolved component (entry + closure).
+    // name -> the components it references. Only resolved components (the app's own .razor
+    // files) are kept; references to unresolved components from packages are dropped.
     private static IReadOnlyDictionary<string, IReadOnlyList<string>> Adjacency(Compilation compilation)
     {
+        var resolved = new HashSet<string>(StringComparer.Ordinal) { compilation.Entry.Name };
+        foreach (var component in compilation.Components)
+            resolved.Add(component.Name);
+
         var adjacency = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal)
         {
-            [compilation.Entry.Name] = Sorted(compilation.Entry.References),
+            [compilation.Entry.Name] = Resolved(compilation.Entry.References, resolved),
         };
 
         foreach (var component in compilation.Components)
-            adjacency[component.Name] = Sorted(component.References);
+            adjacency[component.Name] = Resolved(component.References, resolved);
 
         return adjacency;
     }
 
-    private static IReadOnlyList<string> Sorted(IReadOnlySet<string> references) =>
-        references.OrderBy(reference => reference, StringComparer.Ordinal).ToList();
+    private static IReadOnlyList<string> Resolved(IReadOnlySet<string> references, HashSet<string> resolved) =>
+        references.Where(resolved.Contains).OrderBy(reference => reference, StringComparer.Ordinal).ToList();
 
     // Component names are C# identifiers, so they are valid Mermaid node ids as-is.
     private static string Mermaid(string entry, IReadOnlyDictionary<string, IReadOnlyList<string>> adjacency)
@@ -85,8 +87,7 @@ public sealed class GraphCommand
     }
 
     // Expands each component once (first time it is reached); later occurrences are marked
-    // Repeated so shared components and cycles stay bounded. Unresolved components (e.g. from
-    // a package) have no entry in the adjacency and render as leaves.
+    // Repeated so shared components and cycles stay bounded.
     private static GraphNode BuildNode(string name, IReadOnlyDictionary<string, IReadOnlyList<string>> adjacency, HashSet<string> expanded)
     {
         if (!expanded.Add(name))
