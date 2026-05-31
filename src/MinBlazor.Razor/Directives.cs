@@ -50,7 +50,11 @@ internal static class Directives
         package = null!;
 
         var body = line[2..].Trim();
-        if (!body.StartsWith(Package) || body.Length == Package.Length || !char.IsWhiteSpace(body[Package.Length]))
+        if (
+            !body.StartsWith(Package)
+            || body.Length == Package.Length
+            || !char.IsWhiteSpace(body[Package.Length])
+        )
             return false;
 
         var arg = body[Package.Length..].Trim();
@@ -58,9 +62,10 @@ internal static class Directives
             return false;
 
         int at = arg.IndexOf('@');
-        package = at < 0
-            ? new PackageReference(arg.ToString(), null)
-            : new PackageReference(arg[..at].ToString(), arg[(at + 1)..].ToString());
+        package =
+            at < 0
+                ? new PackageReference(arg.ToString(), null)
+                : new PackageReference(arg[..at].ToString(), arg[(at + 1)..].ToString());
 
         return true;
     }

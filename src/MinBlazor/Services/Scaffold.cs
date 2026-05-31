@@ -1,3 +1,5 @@
+using MinBlazor.Build;
+using MinBlazor.Build.Models;
 using MinBlazor.Razor;
 using MinBlazor.Razor.Models;
 
@@ -7,7 +9,9 @@ public sealed class Scaffold
 {
     private const string DependenciesFile = "Dependencies.cs";
 
-    public void Write(string targetDir, string sourceDir, Compilation compilation, int port)
+    private static readonly IReadOnlyDictionary<string, string> EmptyProperties = new Dictionary<string, string>();
+
+    public void Write(string targetDir, string sourceDir, Compilation compilation, int port, BuildOutputs? build)
     {
         Directory.CreateDirectory(targetDir);
         Directory.CreateDirectory(Path.Combine(targetDir, "Properties"));
@@ -23,19 +27,63 @@ public sealed class Scaffold
             WriteComponent(targetDir, emitter, component, hostTags, produced);
 
         foreach (var cs in Directory.EnumerateFiles(sourceDir, "*.cs"))
-            Produce(produced, Path.Combine(targetDir, Path.GetFileName(cs)), File.ReadAllText(cs));
+            if (!string.Equals(Path.GetFileName(cs), BuildScript.FileName, StringComparison.OrdinalIgnoreCase))
+                Produce(produced, Path.Combine(targetDir, Path.GetFileName(cs)), File.ReadAllText(cs));
+
+        if (build is not null)
+            WriteBuildOutputs(targetDir, produced, hostTags, build);
 
         var hasDependencies = File.Exists(Path.Combine(sourceDir, DependenciesFile));
+        var packages = MergePackages(compilation.Packages, build);
+        var properties = build?.Properties ?? EmptyProperties;
 
         Produce(produced, Path.Combine(targetDir, ".gitignore"), "*\n");
-        Produce(produced, Path.Combine(targetDir, "App.csproj"), ScaffoldTemplates.Csproj(AppInfo.BlazorPackageVersion, compilation.Packages));
+        Produce(produced, Path.Combine(targetDir, "App.csproj"), ScaffoldTemplates.Csproj(AppInfo.BlazorPackageVersion, packages, properties));
         Produce(produced, Path.Combine(targetDir, "Program.cs"), ScaffoldTemplates.Program(compilation.Entry.Name, hasDependencies));
         Produce(produced, Path.Combine(targetDir, "_Imports.razor"), ScaffoldTemplates.Imports([]));
         Produce(produced, Path.Combine(targetDir, "Properties", "launchSettings.json"), ScaffoldTemplates.LaunchSettings(port));
+
         var head = string.Join('\n', hostTags.OrderBy(tag => tag, StringComparer.Ordinal));
         Produce(produced, Path.Combine(targetDir, "wwwroot", "index.html"), ScaffoldTemplates.IndexHtml.Replace(ScaffoldTemplates.HeadPlaceholder, head));
 
         DeleteOrphans(targetDir, produced);
+    }
+
+    private static void WriteBuildOutputs(string targetDir, HashSet<string> produced, List<string> hostTags, BuildOutputs build)
+    {
+        hostTags.AddRange(build.HeadTags);
+
+        foreach (var source in build.Sources)
+            Produce(produced, Path.Combine(targetDir, source.FileName), source.Code);
+
+        if (build.Options.Count > 0)
+            Produce(produced, Path.Combine(targetDir, "BuildOptions.cs"), ScaffoldTemplates.BuildOptions(build.Options));
+
+        foreach (var asset in build.Assets)
+            WriteAsset(targetDir, asset);
+    }
+
+    private static void WriteAsset(string targetDir, BuildAsset asset)
+    {
+        var path = Path.Combine(targetDir, "wwwroot", asset.Path.Replace('/', Path.DirectorySeparatorChar));
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+
+        if (!File.Exists(path) || !File.ReadAllBytes(path).AsSpan().SequenceEqual(asset.Contents))
+            File.WriteAllBytes(path, asset.Contents);
+    }
+
+    private static IReadOnlyList<PackageReference> MergePackages(IReadOnlyList<PackageReference> compilationPackages, BuildOutputs? build)
+    {
+        var merged = new Dictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var package in compilationPackages)
+            merged[package.Name] = package;
+
+        if (build is not null)
+            foreach (var package in build.Packages)
+                merged[package.Name] = package;
+
+        return merged.Values.OrderBy(package => package.Name, StringComparer.Ordinal).ToList();
     }
 
     private static void WriteComponent(string targetDir, Emitter emitter, CompiledComponent component, List<string> hostTags, HashSet<string> produced)
