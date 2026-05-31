@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
@@ -6,13 +7,15 @@ public sealed class ComponentRegistry : IComponentResolver
 {
     private readonly Dictionary<string, IComponentSource> _sources = new(StringComparer.Ordinal);
 
-    public void Add(string name, IComponentSource source)
+    public Result Add(string name, IComponentSource source)
     {
         if (!_sources.TryAdd(name, source))
-            throw new DuplicateComponentException(name);
+            return Result.Fail($"A component named '{name}' is already registered.");
+
+        return Result.Ok();
     }
 
-    public void Add(string name, string razorSource) =>
+    public Result Add(string name, string razorSource) =>
         Add(name, new InlineComponentSource(razorSource));
 
     public bool Contains(string name) => _sources.ContainsKey(name);

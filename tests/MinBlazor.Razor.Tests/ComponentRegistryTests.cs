@@ -24,13 +24,14 @@ public class ComponentRegistryTests
     }
 
     [Test]
-    public async Task DuplicateNameThrows()
+    public async Task DuplicateNameFails()
     {
         var registry = new ComponentRegistry();
-        registry.Add("Card", "<p>one</p>");
 
-        await Assert
-            .That(() => registry.Add("Card", "<p>two</p>"))
-            .Throws<DuplicateComponentException>();
+        await Assert.That(registry.Add("Card", "<p>one</p>").IsSuccess).IsTrue();
+
+        var duplicate = registry.Add("Card", "<p>two</p>");
+        await Assert.That(duplicate.IsSuccess).IsFalse();
+        await Assert.That(duplicate.Error).Contains("Card");
     }
 }

@@ -32,13 +32,10 @@ public sealed class RunCommand
         var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
 
         var registry = new ComponentRegistry();
-        try
+        var indexed = FolderIndexer.Index(sourceDir, registry);
+        if (!indexed.IsSuccess)
         {
-            FolderIndexer.Index(sourceDir, registry);
-        }
-        catch (DuplicateComponentException ex)
-        {
-            _output.Error(ex.Message);
+            _output.Error(indexed.Error!);
             return 1;
         }
 
