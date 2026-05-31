@@ -67,6 +67,7 @@ and `Uses(name)`).
 | `AddHeadTag(html)` | inject into the host page `<head>` |
 | `AddStaticAsset(path, string\|bytes)` | write a `wwwroot/...` file |
 | `AddSource(file, code)` | add a `.cs` file compiled into the app |
+| `AddSourceDirectory(path)` | include every `.cs` under a folder (recursive) into the app |
 | `AddOption(name, value)` | see below |
 | `AddComponent(name, razor)` | register a virtual component (`BeforeCompile` only) |
 | `Log(message)` | print to the minblazor console |
@@ -93,3 +94,6 @@ generated file each time and forces a rebuild.
 - `Build.cs` runs with full desktop .NET (filesystem, environment) and is **not** part
   of the app.
 - A compile error in `Build.cs`, or a hook that throws, aborts the run.
+- `AddSourceDirectory(path)` resolves `path` against `SourceDirectory` (absolute paths
+  allowed) and pulls in every `.cs` under it, recursively, by filename — so the names must
+  be unique. Reference the brought-in types from a component with `@using Your.Namespace`.
