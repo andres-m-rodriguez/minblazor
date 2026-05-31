@@ -10,7 +10,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>minblazor</ToolCommandName>
     <PackageId>MinBlazor</PackageId>
-    <Version>0.3.2</Version>
+    <Version>0.4.0</Version>
     <Authors>andresitomanuel</Authors>
     <Description>Run a single .razor file as a Blazor WebAssembly app.</Description>
     <PackageOutputPath>$(MSBuildThisFileDirectory)../../nupkg</PackageOutputPath>
