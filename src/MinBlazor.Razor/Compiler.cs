@@ -49,7 +49,8 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
         return new Compilation(
             entry,
             components,
-            packages.Values.OrderBy(p => p.Name, StringComparer.Ordinal).ToList());
+            packages.Values.OrderBy(p => p.Name, StringComparer.Ordinal).ToList()
+        );
     }
 
     private CompiledComponent CompileUnit(string name, string source)
@@ -58,6 +59,12 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
         var transformed = _transformer.Transform(document);
         var references = _analyzer.Analyze(transformed.Document).Components;
 
-        return new CompiledComponent(name, transformed.Document, transformed.HostTags, references, transformed.Packages);
+        return new CompiledComponent(
+            name,
+            transformed.Document,
+            transformed.HostTags,
+            references,
+            transformed.Packages
+        );
     }
 }
