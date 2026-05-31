@@ -1,15 +1,15 @@
 using System.Security.Cryptography;
 using System.Text;
+using MinBlazor.Build.Models;
 using MinBlazor.Models;
 using MinBlazor.Razor;
+using MinBlazor.Razor.Models;
 using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
 public sealed class RunCommand
 {
-    private const string ListeningMarker = "Now listening on:";
-
     private readonly IOutput _output;
 
     public RunCommand(IOutput output) => _output = output;
@@ -30,16 +30,63 @@ public sealed class RunCommand
 
         var entrySource = File.ReadAllText(razorPath);
         var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
-        var resolver = new FolderResolver(sourceDir);
+
+        var registry = new ComponentRegistry();
+        var indexed = FolderIndexer.Index(sourceDir, registry);
+        if (!indexed.IsSuccess)
+        {
+            _output.Error(indexed.Error!);
+            return 1;
+        }
+
+        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, _output.Info);
+        if (!scriptResult.IsSuccess)
+        {
+            _output.Error(scriptResult.Error!);
+            return 1;
+        }
+
+        var script = scriptResult.Value;
+
+        if (script is not null)
+        {
+            var before = script.RunBeforeCompile();
+            if (!before.IsSuccess)
+            {
+                _output.Error(before.Error!);
+                return 1;
+            }
+
+            foreach (var component in script.Outputs.Components)
+            {
+                var added = registry.Add(component.Name, component.Source);
+                if (!added.IsSuccess)
+                {
+                    _output.Error(added.Error!);
+                    return 1;
+                }
+            }
+        }
+
         var diagnostics = new Diagnostics();
-        var compilation = new Compiler(resolver, diagnostics).Compile(entryName, entrySource);
+        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
 
         foreach (var diagnostic in diagnostics.Items)
             _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
 
-        new Scaffold().Write(scaffoldDir, sourceDir, compilation, options.Port);
+        if (script is not null)
+        {
+            var after = script.RunAfterCompile(BuildInfo(compilation));
+            if (!after.IsSuccess)
+            {
+                _output.Error(after.Error!);
+                return 1;
+            }
+        }
 
-        return Serve(scaffoldDir, options.OpenBrowser);
+        new Scaffold().Write(scaffoldDir, sourceDir, compilation, options.Port, script?.Outputs);
+
+        return Serve(scaffoldDir, options.Port, options.OpenBrowser);
     }
 
     private static string CacheDirectory(string razorPath)
@@ -49,23 +96,35 @@ public sealed class RunCommand
         return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
 
-    private int Serve(string scaffoldDir, bool openBrowser)
+    private static CompilationInfo BuildInfo(Compilation compilation)
     {
-        using var server = new DevServer(scaffoldDir);
-        var browserOpened = false;
+        var components = new List<string> { compilation.Entry.Name };
+        components.AddRange(compilation.Components.Select(component => component.Name));
+        return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
+    }
 
-        server.OutputLine += line =>
+    private int Serve(string scaffoldDir, int port, bool openBrowser)
+    {
+        var builder = new Builder();
+        builder.Output += _output.Info;
+
+        _output.Info("Building (first run may take a while)\n");
+
+        var built = builder.Build(scaffoldDir);
+        if (!built.IsSuccess)
         {
-            _output.Info(line);
+            _output.Error(built.Error!);
+            return 1;
+        }
 
-            if (openBrowser && !browserOpened && TryReadListeningUrl(line, out var url))
-            {
-                browserOpened = true;
-                if (!Browser.TryOpen(url))
-                    _output.Info($"Open your browser at {url}");
-            }
-        };
-        server.ErrorLine += _output.Info;
+        var assets = StaticAssets.Load(built.Value!);
+        if (!assets.IsSuccess)
+        {
+            _output.Error(assets.Error!);
+            return 1;
+        }
+
+        using var server = new StaticServer(assets.Value!, port);
 
         Console.CancelKeyPress += (_, e) =>
         {
@@ -73,31 +132,23 @@ public sealed class RunCommand
             server.Stop();
         };
 
-        _output.Info("Starting dev server (first run may take a moment)\n");
-
         try
         {
             server.Start();
         }
         catch (Exception ex)
         {
-            _output.Error($"Failed to launch dotnet: {ex.Message}");
+            _output.Error($"Failed to start server: {ex.Message}");
             return 1;
         }
 
-        return server.WaitForExit();
-    }
+        var url = $"http://localhost:{port}/";
+        _output.Info($"\nServing on {url}  (Ctrl+C to stop)");
 
-    private static bool TryReadListeningUrl(string line, out string url)
-    {
-        var index = line.IndexOf(ListeningMarker, StringComparison.Ordinal);
-        if (index < 0)
-        {
-            url = string.Empty;
-            return false;
-        }
+        if (openBrowser && !Browser.TryOpen(url))
+            _output.Info($"Open your browser at {url}");
 
-        url = line[(index + ListeningMarker.Length)..].Trim();
-        return url.Length > 0;
+        server.WaitForExit();
+        return 0;
     }
 }
