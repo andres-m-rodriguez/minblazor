@@ -24,6 +24,7 @@ public static class ArgumentParser
     {
         string? file = null;
         bool json = false;
+        bool mermaid = false;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -32,6 +33,10 @@ public static class ArgumentParser
             {
                 case "--json":
                     json = true;
+                    break;
+
+                case "--mermaid":
+                    mermaid = true;
                     break;
 
                 default:
@@ -53,7 +58,7 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(new CliCommand.Graph(new GraphOptions { RazorFile = razorPath, Json = json }));
+        return Ok(new CliCommand.Graph(new GraphOptions { RazorFile = razorPath, Json = json, Mermaid = mermaid }));
     }
 
     private static Result<CliCommand> ParseBuild(string[] args)

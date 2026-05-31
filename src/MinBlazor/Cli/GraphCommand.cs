@@ -29,6 +29,13 @@ public sealed class GraphCommand
 
         var compilation = compiled.Value!.Compilation;
         var adjacency = Adjacency(compilation);
+
+        if (options.Mermaid)
+        {
+            _output.Info(Mermaid(compilation.Entry.Name, adjacency));
+            return 0;
+        }
+
         var root = BuildNode(compilation.Entry.Name, adjacency, new HashSet<string>(StringComparer.Ordinal));
 
         if (options.Json)
@@ -61,6 +68,21 @@ public sealed class GraphCommand
 
     private static IReadOnlyList<string> Sorted(IReadOnlySet<string> references) =>
         references.OrderBy(reference => reference, StringComparer.Ordinal).ToList();
+
+    // Component names are C# identifiers, so they are valid Mermaid node ids as-is.
+    private static string Mermaid(string entry, IReadOnlyDictionary<string, IReadOnlyList<string>> adjacency)
+    {
+        var lines = new List<string> { "graph TD" };
+
+        foreach (var node in adjacency.Keys.OrderBy(name => name, StringComparer.Ordinal))
+            foreach (var reference in adjacency[node])
+                lines.Add($"    {node} --> {reference}");
+
+        if (lines.Count == 1)
+            lines.Add($"    {entry}");
+
+        return string.Join('\n', lines);
+    }
 
     // Expands each component once (first time it is reached); later occurrences are marked
     // Repeated so shared components and cycles stay bounded. Unresolved components (e.g. from
