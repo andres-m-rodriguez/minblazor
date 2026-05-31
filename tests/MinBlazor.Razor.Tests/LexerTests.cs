@@ -36,4 +36,27 @@ public class LexerTests
 
         await Assert.That(new Emitter().Emit(document)).IsEqualTo(source);
     }
+
+    [Test]
+    public async Task Directive_AtLineStart_IsDirectiveToken_AndStaysLossless()
+    {
+        var source = "#:package MudBlazor@7.10.0\n<h1>Hi</h1>";
+
+        var document = new Parser(new Lexer(source)).Parse();
+
+        var directive = document.Tokens.Single(token => token.Kind == TokenKind.Directive);
+        await Assert.That(document.Text(directive).ToString()).IsEqualTo("#:package MudBlazor@7.10.0\n");
+        await Assert.That(new Emitter().Emit(document)).IsEqualTo(source);
+    }
+
+    [Test]
+    public async Task Hash_NotAtLineStart_IsText()
+    {
+        var source = "<p>a #: b</p>";
+
+        var document = new Parser(new Lexer(source)).Parse();
+
+        await Assert.That(document.Tokens.Any(token => token.Kind == TokenKind.Directive)).IsFalse();
+        await Assert.That(new Emitter().Emit(document)).IsEqualTo(source);
+    }
 }

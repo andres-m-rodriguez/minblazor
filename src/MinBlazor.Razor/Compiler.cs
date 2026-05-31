@@ -54,11 +54,10 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
 
     private CompiledComponent CompileUnit(string name, string source)
     {
-        var (cleaned, packages) = Directives.Extract(source);
-        var document = new Parser(new Lexer(cleaned)).Parse();
+        var document = new Parser(new Lexer(source)).Parse();
         var transformed = _transformer.Transform(document);
         var references = _analyzer.Analyze(transformed.Document).Components;
 
-        return new CompiledComponent(name, transformed.Document, transformed.HostTags, references, packages);
+        return new CompiledComponent(name, transformed.Document, transformed.HostTags, references, transformed.Packages);
     }
 }

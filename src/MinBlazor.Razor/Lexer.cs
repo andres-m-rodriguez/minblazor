@@ -32,6 +32,12 @@ public sealed class Lexer
         if (_cursor >= src.Length)
             return null;
 
+        if (TryParseDirective(src, _cursor, out var directiveToken))
+        {
+            _cursor = directiveToken.End;
+            return directiveToken;
+        }
+
         if (TryParseHostTag(src, _cursor, out var hostToken))
         {
             _cursor = hostToken.End;
@@ -81,11 +87,35 @@ public sealed class Lexer
         int i = pos;
 
         while (
-            i < src.Length && !TryParseHostTag(src, i, out _) && !TryParseComponent(src, i, out _)
+            i < src.Length
+            && !TryParseDirective(src, i, out _)
+            && !TryParseHostTag(src, i, out _)
+            && !TryParseComponent(src, i, out _)
         )
             i++;
 
         return new Token(TokenKind.Text, pos, i);
+    }
+
+    private static bool TryParseDirective(ReadOnlySpan<char> src, int pos, out Token directiveToken)
+    {
+        directiveToken = default;
+
+        bool lineStart = pos == 0 || src[pos - 1] == '\n';
+        if (!lineStart || pos + 1 >= src.Length || src[pos] != '#' || src[pos + 1] != ':')
+            return false;
+
+        directiveToken = new Token(TokenKind.Directive, pos, LineEnd(src, pos));
+        return true;
+    }
+
+    private static int LineEnd(ReadOnlySpan<char> src, int pos)
+    {
+        int i = pos;
+        while (i < src.Length && src[i] != '\n')
+            i++;
+
+        return i < src.Length ? i + 1 : src.Length;
     }
 
     private static bool IsComponent(ReadOnlySpan<char> src, TagInfo tag) =>
