@@ -7,6 +7,7 @@ public enum TokenKind
     ComponentClose,
     ComponentSelfClose,
     HostTag,
+    Directive,
 }
 
 public readonly record struct Token(TokenKind Kind, int Start, int End)
