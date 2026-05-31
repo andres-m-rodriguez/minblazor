@@ -8,8 +8,6 @@ namespace MinBlazor.Cli;
 
 public sealed class RunCommand
 {
-    private const string ListeningMarker = "Now listening on:";
-
     private readonly IOutput _output;
 
     public RunCommand(IOutput output) => _output = output;
@@ -47,7 +45,7 @@ public sealed class RunCommand
 
         new Scaffold().Write(scaffoldDir, sourceDir, compilation, options.Port);
 
-        return Serve(scaffoldDir, options.OpenBrowser);
+        return Serve(scaffoldDir, options.Port, options.OpenBrowser);
     }
 
     private static string CacheDirectory(string razorPath)
@@ -57,23 +55,28 @@ public sealed class RunCommand
         return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
 
-    private int Serve(string scaffoldDir, bool openBrowser)
+    private int Serve(string scaffoldDir, int port, bool openBrowser)
     {
-        using var server = new DevServer(scaffoldDir);
-        var browserOpened = false;
+        var builder = new Builder();
+        builder.Output += _output.Info;
 
-        server.OutputLine += line =>
+        _output.Info("Building (first run may take a while)\n");
+
+        var built = builder.Build(scaffoldDir);
+        if (!built.IsSuccess)
         {
-            _output.Info(line);
+            _output.Error(built.Error!);
+            return 1;
+        }
 
-            if (openBrowser && !browserOpened && TryReadListeningUrl(line, out var url))
-            {
-                browserOpened = true;
-                if (!Browser.TryOpen(url))
-                    _output.Info($"Open your browser at {url}");
-            }
-        };
-        server.ErrorLine += _output.Info;
+        var assets = StaticAssets.Load(built.Value!);
+        if (!assets.IsSuccess)
+        {
+            _output.Error(assets.Error!);
+            return 1;
+        }
+
+        using var server = new StaticServer(assets.Value!, port);
 
         Console.CancelKeyPress += (_, e) =>
         {
@@ -81,31 +84,23 @@ public sealed class RunCommand
             server.Stop();
         };
 
-        _output.Info("Starting dev server (first run may take a moment)\n");
-
         try
         {
             server.Start();
         }
         catch (Exception ex)
         {
-            _output.Error($"Failed to launch dotnet: {ex.Message}");
+            _output.Error($"Failed to start server: {ex.Message}");
             return 1;
         }
 
-        return server.WaitForExit();
-    }
+        var url = $"http://localhost:{port}/";
+        _output.Info($"\nServing on {url}  (Ctrl+C to stop)");
 
-    private static bool TryReadListeningUrl(string line, out string url)
-    {
-        var index = line.IndexOf(ListeningMarker, StringComparison.Ordinal);
-        if (index < 0)
-        {
-            url = string.Empty;
-            return false;
-        }
+        if (openBrowser && !Browser.TryOpen(url))
+            _output.Info($"Open your browser at {url}");
 
-        url = line[(index + ListeningMarker.Length)..].Trim();
-        return url.Length > 0;
+        server.WaitForExit();
+        return 0;
     }
 }

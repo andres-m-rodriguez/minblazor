@@ -28,8 +28,7 @@ internal static class ScaffoldTemplates
               </PropertyGroup>
 
               <ItemGroup>
-                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{packageVersion}" />
-                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="{packageVersion}" PrivateAssets="all" />{userPackages}
+                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{packageVersion}" />{userPackages}
               </ItemGroup>
 
             </Project>
