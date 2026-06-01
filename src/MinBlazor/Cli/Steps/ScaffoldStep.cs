@@ -1,3 +1,4 @@
+using MinBlazor.Compiler;
 using MinBlazor.Core;
 using MinBlazor.Parser;
 using MinBlazor.Scaffold;
@@ -15,7 +16,7 @@ public sealed class ScaffoldStep : IPipelineStep
     {
         var razorPath = context.RazorPath;
         var sourceDir = Path.GetDirectoryName(razorPath)!;
-        var scaffoldDir = Pipeline.CacheDirectory(razorPath);
+        var scaffoldDir = ScaffoldCache.DirectoryFor(razorPath);
 
         if (context.Clean && Directory.Exists(scaffoldDir))
         {
@@ -32,12 +33,14 @@ public sealed class ScaffoldStep : IPipelineStep
             AppInfo.BlazorPackageVersion,
             AppInfo.DefaultPort,
             HasDependencies: File.Exists(Path.Combine(sourceDir, DependenciesFile)),
-            PackageUsings: packageUsings);
+            PackageUsings: packageUsings
+        );
 
         var content = new ScaffoldGenerator().Generate(
             context.Compilation!,
             context.Script?.Outputs,
-            options);
+            options
+        );
 
         var produced = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
@@ -61,7 +64,11 @@ public sealed class ScaffoldStep : IPipelineStep
         return Result.Ok();
     }
 
-    private static void WriteEntry(string scaffoldDir, ScaffoldEntry entry, HashSet<string> produced)
+    private static void WriteEntry(
+        string scaffoldDir,
+        ScaffoldEntry entry,
+        HashSet<string> produced
+    )
     {
         switch (entry)
         {
@@ -78,23 +85,38 @@ public sealed class ScaffoldStep : IPipelineStep
                 break;
 
             case HostPage f:
-                ProduceBinary(Path.Combine(scaffoldDir, "wwwroot", "index.html"),
-                    System.Text.Encoding.UTF8.GetBytes(f.Content.ToString()), produced, "index.html");
+                ProduceBinary(
+                    Path.Combine(scaffoldDir, "wwwroot", "index.html"),
+                    System.Text.Encoding.UTF8.GetBytes(f.Content.ToString()),
+                    produced,
+                    "index.html"
+                );
                 break;
 
             case StaticAsset f:
-                var assetPath = Path.Combine(scaffoldDir, "wwwroot",
-                    f.Name.Replace('/', Path.DirectorySeparatorChar));
+                var assetPath = Path.Combine(
+                    scaffoldDir,
+                    "wwwroot",
+                    f.Name.Replace('/', Path.DirectorySeparatorChar)
+                );
                 Directory.CreateDirectory(Path.GetDirectoryName(assetPath)!);
                 var assetBytes = f.Content.ToArray();
-                if (!File.Exists(assetPath) || !File.ReadAllBytes(assetPath).AsSpan().SequenceEqual(assetBytes))
+                if (
+                    !File.Exists(assetPath)
+                    || !File.ReadAllBytes(assetPath).AsSpan().SequenceEqual(assetBytes)
+                )
                     File.WriteAllBytes(assetPath, assetBytes);
                 produced.Add(Path.GetFileName(assetPath));
                 break;
         }
     }
 
-    private static void Produce(string scaffoldDir, string name, string content, HashSet<string> produced)
+    private static void Produce(
+        string scaffoldDir,
+        string name,
+        string content,
+        HashSet<string> produced
+    )
     {
         produced.Add(name);
         var path = Path.Combine(scaffoldDir, name);
@@ -102,7 +124,12 @@ public sealed class ScaffoldStep : IPipelineStep
             File.WriteAllText(path, content);
     }
 
-    private static void ProduceBinary(string path, byte[] content, HashSet<string> produced, string name)
+    private static void ProduceBinary(
+        string path,
+        byte[] content,
+        HashSet<string> produced,
+        string name
+    )
     {
         produced.Add(name);
         if (!File.Exists(path) || !File.ReadAllBytes(path).AsSpan().SequenceEqual(content))
@@ -111,7 +138,8 @@ public sealed class ScaffoldStep : IPipelineStep
 
     private static void DeleteOrphans(string scaffoldDir, HashSet<string> produced)
     {
-        var tracked = Directory.EnumerateFiles(scaffoldDir, "*.razor")
+        var tracked = Directory
+            .EnumerateFiles(scaffoldDir, "*.razor")
             .Concat(Directory.EnumerateFiles(scaffoldDir, "*.cs"));
 
         foreach (var file in tracked)
@@ -119,7 +147,7 @@ public sealed class ScaffoldStep : IPipelineStep
                 File.Delete(file);
     }
 
-    private static IReadOnlyList<string> GetPackageUsings(string sourceDir, MinBlazor.Compiler.Compilation compilation)
+    private static IReadOnlyList<string> GetPackageUsings(string sourceDir, Compilation compilation)
     {
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is null)
@@ -131,12 +159,15 @@ public sealed class ScaffoldStep : IPipelineStep
 
     private static string? FindBuildOutput(string sourceDir)
     {
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
+        )
         {
-            var binDir = Path.Combine(Pipeline.CacheDirectory(file), "bin", "Debug", "net10.0");
+            var binDir = Path.Combine(ScaffoldCache.DirectoryFor(file), "bin", "Debug", "net10.0");
             if (Directory.Exists(binDir))
                 return binDir;
         }
         return null;
     }
 }
+

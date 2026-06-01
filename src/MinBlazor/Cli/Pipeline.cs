@@ -1,15 +1,13 @@
-using MinBlazor.Core;
 using System.Security.Cryptography;
 using System.Text;
 using MinBlazor.Build.Models;
 using MinBlazor.Compiler;
+using MinBlazor.Core;
 using MinBlazor.Index;
 using MinBlazor.Models;
 using MinBlazor.Parser;
 using MinBlazor.Services;
 using CompilerClass = MinBlazor.Compiler.RazorCompiler;
-
-
 
 namespace MinBlazor.Cli;
 
@@ -261,17 +259,8 @@ public sealed class Pipeline(IOutput output)
     private static IReadOnlyList<string> PackageNames(Compiled result) =>
         result.Compilation.Packages.Select(p => p.Name).ToList();
 
-    public static string CacheDirectory(string razorPath)
-    {
-        var path = Path.GetFullPath(razorPath);
-        if (OperatingSystem.IsWindows())
-            path = path.ToLowerInvariant();
-
-        var hash = Convert
-            .ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16]
-            .ToLowerInvariant();
-        return Path.Combine(Path.GetTempPath(), "minblazor", hash);
-    }
+    public static string CacheDirectory(string razorPath) =>
+        ScaffoldCache.DirectoryFor(razorPath);
 
     private static CompilationInfo BuildInfo(Compilation compilation)
     {
@@ -280,9 +269,3 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
-
-
-
-
-
-
