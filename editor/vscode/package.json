@@ -1,0 +1,37 @@
+{
+  "name": "minblazor-lsp",
+  "displayName": "minblazor",
+  "description": "Component IntelliSense for minblazor .razor files",
+  "version": "0.1.0",
+  "publisher": "minblazor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andres-m-rodriguez/minblazor"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:razor",
+    "onLanguage:aspnetcorerazor",
+    "workspaceContains:**/*.razor"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {},
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.82.0",
+    "typescript": "^5.4.0"
+  }
+}
