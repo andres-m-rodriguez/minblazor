@@ -29,11 +29,14 @@ public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagn
         {
             var name = queue.Dequeue();
 
-            if (!_resolver.TryResolve(name, out var source))
+            var resolved = _resolver.TryResolve(name, out var source);
+            if (resolved == ResolveResult.NotFound)
             {
                 _diagnostics.Warning($"Could not resolve component '{name}'.");
                 continue;
             }
+            if (resolved == ResolveResult.External)
+                continue;
 
             var unit = CompileUnit(name, source);
             components.Add(unit);
