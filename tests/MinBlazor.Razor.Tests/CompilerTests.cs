@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using MinBlazor.Compiler;
 using MinBlazor.Razor;
 using MinBlazor.Razor.Models;
 
@@ -12,8 +13,12 @@ public class CompilerTests
 
         public MapResolver(Dictionary<string, string> sources) => _sources = sources;
 
-        public bool TryResolve(string componentName, [MaybeNullWhen(false)] out string source) =>
-            _sources.TryGetValue(componentName, out source);
+        public ResolveResult TryResolve(string componentName, [NotNullWhen(true)] out string? source)
+        {
+            if (_sources.TryGetValue(componentName, out source))
+                return ResolveResult.Resolved;
+            return ResolveResult.NotFound;
+        }
     }
 
     [Test]
