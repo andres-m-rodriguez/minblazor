@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MinBlazor.Razor\MinBlazor.Razor.csproj" />
+    <ProjectReference Include="..\MinBlazor.Parser\MinBlazor.Parser.csproj" />
   </ItemGroup>
 
   <ItemGroup>

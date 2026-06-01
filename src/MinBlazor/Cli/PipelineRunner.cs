@@ -1,5 +1,5 @@
 using MinBlazor.Cli.Steps;
-using MinBlazor.Razor.Models;
+using MinBlazor.Parser;
 
 namespace MinBlazor.Cli;
 

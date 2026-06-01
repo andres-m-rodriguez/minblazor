@@ -1,4 +1,4 @@
-using MinBlazor.Razor;
+using MinBlazor.Compiler;
 
 namespace MinBlazor.Cli;
 

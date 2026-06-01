@@ -10,9 +10,9 @@ public sealed class Scanner
     {
         var packages = new Dictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var token in document.Tokens)
-            if (token.Kind == TokenKind.Directive)
-                if (TryParsePackage(document.Text(token), out var package))
+        foreach (var node in document.Nodes)
+            if (node.Kind == NodeKind.Directive)
+                if (TryParsePackage(node.Text.Span, out var package))
                     packages[package.Name] = package;
 
         return packages.Values.ToList();
@@ -23,11 +23,9 @@ public sealed class Scanner
         package = null!;
 
         var body = directive[2..].Trim();
-        if (
-            !body.StartsWith(Package)
+        if (!body.StartsWith(Package)
             || body.Length == Package.Length
-            || !char.IsWhiteSpace(body[Package.Length])
-        )
+            || !char.IsWhiteSpace(body[Package.Length]))
             return false;
 
         var arg = body[Package.Length..].Trim();
@@ -35,10 +33,9 @@ public sealed class Scanner
             return false;
 
         int at = arg.IndexOf('@');
-        package =
-            at < 0
-                ? new PackageReference(arg.ToString(), null)
-                : new PackageReference(arg[..at].ToString(), arg[(at + 1)..].ToString());
+        package = at < 0
+            ? new PackageReference(arg.ToString(), null)
+            : new PackageReference(arg[..at].ToString(), arg[(at + 1)..].ToString());
 
         return true;
     }

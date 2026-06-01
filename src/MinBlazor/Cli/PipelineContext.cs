@@ -1,5 +1,5 @@
 using MinBlazor.Index;
-using MinBlazor.Razor.Models;
+using MinBlazor.Compiler;
 using MinBlazor.Services;
 
 namespace MinBlazor.Cli;

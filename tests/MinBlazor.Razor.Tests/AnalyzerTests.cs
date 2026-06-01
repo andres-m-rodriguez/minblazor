@@ -10,7 +10,7 @@ public class AnalyzerTests
         var path = Path.Combine(AppContext.BaseDirectory, "TestFiles", "Simple.razor");
         var source = await File.ReadAllTextAsync(path);
 
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var graph = new Analyzer().Analyze(document);
 
         await Assert.That(graph.Roots.Count).IsEqualTo(1);
@@ -26,3 +26,5 @@ public class AnalyzerTests
         await Assert.That(graph.Components.Contains("Counter")).IsTrue();
     }
 }
+
+

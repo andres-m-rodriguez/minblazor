@@ -55,7 +55,7 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
 
     private CompiledComponent CompileUnit(string name, string source)
     {
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var transformed = _transformer.Transform(document);
         var references = _analyzer.Analyze(transformed.Document).Components;
 
@@ -68,3 +68,5 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
         );
     }
 }
+
+

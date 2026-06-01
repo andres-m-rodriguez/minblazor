@@ -2,7 +2,7 @@ using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
-public sealed class Lexer
+internal sealed class Lexer
 {
     private readonly ReadOnlyMemory<char> _src;
     private int _cursor;
@@ -62,7 +62,7 @@ public sealed class Lexer
         if (src[pos] != '<' || ReadTag(src, pos) is not { } tag || !tag.HasHostTag)
             return false;
 
-        hostToken = new Token(TokenKind.HostTag, pos, ElementEnd(src, tag));
+        hostToken = new Token(NodeKind.HostTag, pos, ElementEnd(src, tag));
         return true;
     }
 
@@ -74,9 +74,9 @@ public sealed class Lexer
             return false;
 
         var kind =
-            tag.IsClose ? TokenKind.ComponentClose
-            : tag.SelfClosing ? TokenKind.ComponentSelfClose
-            : TokenKind.ComponentOpen;
+            tag.IsClose ? NodeKind.ComponentClose
+            : tag.SelfClosing ? NodeKind.ComponentSelfClose
+            : NodeKind.ComponentOpen;
 
         componentToken = new Token(kind, pos, tag.End);
         return true;
@@ -94,7 +94,7 @@ public sealed class Lexer
         )
             i++;
 
-        return new Token(TokenKind.Text, pos, i);
+        return new Token(NodeKind.Text, pos, i);
     }
 
     private static bool TryParseDirective(ReadOnlySpan<char> src, int pos, out Token directiveToken)
@@ -105,7 +105,7 @@ public sealed class Lexer
         if (!lineStart || pos + 1 >= src.Length || src[pos] != '#' || src[pos + 1] != ':')
             return false;
 
-        directiveToken = new Token(TokenKind.Directive, pos, LineEnd(src, pos));
+        directiveToken = new Token(NodeKind.Directive, pos, LineEnd(src, pos));
         return true;
     }
 
@@ -239,3 +239,4 @@ public sealed class Lexer
         return null;
     }
 }
+

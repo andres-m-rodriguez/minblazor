@@ -10,27 +10,27 @@ public sealed class Analyzer
         var components = new HashSet<string>();
         var stack = new Stack<(string Name, List<ComponentNode> Children)>();
 
-        foreach (var token in document.Tokens)
+        foreach (var node in document.Nodes)
         {
-            switch (token.Kind)
+            switch (node.Kind)
             {
-                case TokenKind.ComponentOpen:
+                case NodeKind.ComponentOpen:
                 {
-                    var name = ComponentName.Of(document, token);
+                    var name = ComponentName.Of(node);
                     components.Add(name);
                     stack.Push((name, []));
                     break;
                 }
 
-                case TokenKind.ComponentSelfClose:
+                case NodeKind.ComponentSelfClose:
                 {
-                    var name = ComponentName.Of(document, token);
+                    var name = ComponentName.Of(node);
                     components.Add(name);
                     Add(stack, roots, new ComponentNode(name, []));
                     break;
                 }
 
-                case TokenKind.ComponentClose when stack.Count > 0:
+                case NodeKind.ComponentClose when stack.Count > 0:
                 {
                     var (name, children) = stack.Pop();
                     Add(stack, roots, new ComponentNode(name, children));
@@ -51,8 +51,7 @@ public sealed class Analyzer
     private static void Add(
         Stack<(string Name, List<ComponentNode> Children)> stack,
         List<ComponentNode> roots,
-        ComponentNode node
-    )
+        ComponentNode node)
     {
         if (stack.Count > 0)
             stack.Peek().Children.Add(node);

@@ -1,6 +1,6 @@
-using MinBlazor.Razor;
-using MinBlazor.Razor.Models;
+using MinBlazor.Compiler;
 using MinBlazor.Services;
+using Result = MinBlazor.Parser.Result;
 
 namespace MinBlazor.Cli;
 

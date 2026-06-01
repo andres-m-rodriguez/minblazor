@@ -1,11 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
 using MinBlazor.Build.Models;
+using MinBlazor.Compiler;
 using MinBlazor.Index;
 using MinBlazor.Models;
-using MinBlazor.Razor;
-using MinBlazor.Razor.Models;
+using MinBlazor.Parser;
 using MinBlazor.Services;
+using CompilerClass = MinBlazor.Compiler.Compiler;
+
+using ServicesComponentName = MinBlazor.Services.ComponentName;
 
 namespace MinBlazor.Cli;
 
@@ -27,11 +30,11 @@ public sealed class Pipeline(IOutput output)
         if (!resolved.IsSuccess)
             return Result<Compiled>.Fail(resolved.Error!);
 
-        var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var entryName = ServicesComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
         var entrySource = File.ReadAllText(razorPath);
 
         var diagnostics = new Diagnostics();
-        var compilation = new Compiler(resolved.Value!.Registry, diagnostics).Compile(
+        var compilation = new CompilerClass(resolved.Value!.Registry, diagnostics).Compile(
             entryName,
             entrySource
         );
@@ -84,7 +87,7 @@ public sealed class Pipeline(IOutput output)
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
         {
-            var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
+            var entryDoc = new RazorParser(File.ReadAllText(razorPath)).Parse();
             var packageNames = new Scanner().Packages(entryDoc).Select(p => p.Name).ToList();
 
             var scanner = new AssemblyScanner();
@@ -113,7 +116,7 @@ public sealed class Pipeline(IOutput output)
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
         {
-            var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
+            var entryDoc = new RazorParser(File.ReadAllText(razorPath)).Parse();
             var packageNames = new Scanner().Packages(entryDoc).Select(p => p.Name).ToList();
             foreach (var component in PackageComponents.Scan(binDir, packageNames).Components)
                 names.Add(component);
@@ -276,3 +279,4 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
+

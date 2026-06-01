@@ -1,7 +1,7 @@
 using MinBlazor.Build;
 using MinBlazor.Build.Models;
-using MinBlazor.Razor;
-using MinBlazor.Razor.Models;
+using MinBlazor.Compiler;
+using MinBlazor.Parser;
 
 namespace MinBlazor.Services;
 

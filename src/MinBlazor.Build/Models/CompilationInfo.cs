@@ -1,4 +1,4 @@
-using MinBlazor.Razor.Models;
+using MinBlazor.Parser;
 
 namespace MinBlazor.Build.Models;
 

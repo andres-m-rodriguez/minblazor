@@ -9,12 +9,12 @@ public class TransformerTests
     {
         var source = "<div><script @hostTag src=\"x.js\"></script><Counter /></div>";
 
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var result = new Transformer().Transform(document);
 
         await Assert.That(result.HostTags.Count).IsEqualTo(1);
         await Assert
-            .That(result.Document.Text(result.HostTags[0].Tag).ToString())
+            .That(result.HostTags[0].Tag.Text.ToString())
             .IsEqualTo("<script @hostTag src=\"x.js\"></script>");
         await Assert.That(new Emitter().Emit(result.Document)).IsEqualTo("<div><Counter /></div>");
     }
@@ -24,7 +24,7 @@ public class TransformerTests
     {
         var source = "#:package MudBlazor@7.10.0\n#:package Blazored.LocalStorage\n<h1>Hi</h1>";
 
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var result = new Transformer().Transform(document);
 
         await Assert.That(result.Packages.Count).IsEqualTo(2);
@@ -35,3 +35,5 @@ public class TransformerTests
         await Assert.That(new Emitter().Emit(result.Document)).IsEqualTo("<h1>Hi</h1>");
     }
 }
+
+

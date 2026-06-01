@@ -9,7 +9,7 @@ public class EmitterTests
     {
         var source = "<div><script @hostTag src=\"x.js\"></script></div>";
 
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var result = new Transformer().Transform(document);
 
         var hostTags = new Emitter().EmitHostTags(result.Document, result.HostTags);
@@ -18,3 +18,5 @@ public class EmitterTests
         await Assert.That(hostTags[0]).IsEqualTo("<script src=\"x.js\"></script>");
     }
 }
+
+

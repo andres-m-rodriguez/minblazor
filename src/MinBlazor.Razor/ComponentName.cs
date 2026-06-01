@@ -4,9 +4,9 @@ namespace MinBlazor.Razor;
 
 internal static class ComponentName
 {
-    internal static string Of(Document document, Token token)
+    internal static string Of(RazorNode node)
     {
-        var span = document.Text(token);
+        var span = node.Text.Span;
 
         int i = 1;
         if (i < span.Length && span[i] == '/')

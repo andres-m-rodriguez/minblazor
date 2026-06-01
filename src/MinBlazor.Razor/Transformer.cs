@@ -6,27 +6,25 @@ public sealed class Transformer
 {
     public TransformResult Transform(Document document)
     {
-        var kept = new List<Token>();
+        var kept = new List<RazorNode>();
         var hostTags = new List<HostTag>();
         var packages = new List<PackageReference>();
 
-        foreach (var token in document.Tokens)
+        foreach (var node in document.Nodes)
         {
-            switch (token.Kind)
+            switch (node.Kind)
             {
-                case TokenKind.HostTag:
-                    hostTags.Add(
-                        new HostTag(token, Markers.Find(document.Text(token), Markers.HostTag))
-                    );
+                case NodeKind.HostTag:
+                    hostTags.Add(new HostTag(node, Markers.Find(node.Text.Span, Markers.HostTag)));
                     break;
 
-                case TokenKind.Directive:
-                    if (Scanner.TryParsePackage(document.Text(token), out var package))
+                case NodeKind.Directive:
+                    if (Scanner.TryParsePackage(node.Text.Span, out var package))
                         packages.Add(package);
                     break;
 
                 default:
-                    kept.Add(token);
+                    kept.Add(node);
                     break;
             }
         }

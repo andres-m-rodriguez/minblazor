@@ -9,8 +9,8 @@ public sealed class Emitter
     {
         var builder = new StringBuilder(document.Source.Length);
 
-        foreach (var token in document.Tokens)
-            builder.Append(document.Text(token));
+        foreach (var node in document.Nodes)
+            builder.Append(node.Text.Span);
 
         return builder.ToString();
     }
@@ -20,7 +20,7 @@ public sealed class Emitter
         var emitted = new List<string>(hostTags.Count);
 
         foreach (var hostTag in hostTags)
-            emitted.Add(Clean(document.Text(hostTag.Tag), hostTag.Marker));
+            emitted.Add(Clean(hostTag.Tag.Text.Span, hostTag.Marker));
 
         return emitted;
     }

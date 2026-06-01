@@ -21,9 +21,11 @@ public class RoundTripTests
         var path = Path.Combine(AppContext.BaseDirectory, "TestFiles", fileName);
         var source = await File.ReadAllTextAsync(path);
 
-        var document = new Parser(new Lexer(source)).Parse();
+        var document = new RazorParser(source).Parse();
         var regenerated = new Emitter().Emit(document);
 
         await Assert.That(regenerated).IsEqualTo(source);
     }
 }
+
+

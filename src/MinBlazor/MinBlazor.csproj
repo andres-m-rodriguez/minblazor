@@ -17,7 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MinBlazor.Razor\MinBlazor.Razor.csproj" />
+    <ProjectReference Include="..\MinBlazor.Parser\MinBlazor.Parser.csproj" />
+    <ProjectReference Include="..\MinBlazor.Compiler\MinBlazor.Compiler.csproj" />
     <ProjectReference Include="..\MinBlazor.Build\MinBlazor.Build.csproj" />
     <ProjectReference Include="..\MinBlazor.Index\MinBlazor.Index.csproj" />
   </ItemGroup>

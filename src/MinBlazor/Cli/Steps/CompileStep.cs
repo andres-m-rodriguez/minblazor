@@ -1,6 +1,8 @@
-using MinBlazor.Razor;
-using MinBlazor.Razor.Models;
+using MinBlazor.Compiler;
+using MinBlazor.Parser;
 using MinBlazor.Services;
+using CompilerClass = MinBlazor.Compiler.Compiler;
+using ServicesComponentName = MinBlazor.Services.ComponentName;
 
 namespace MinBlazor.Cli.Steps;
 
@@ -26,11 +28,11 @@ public sealed class CompileStep : IPipelineStep
                     return Result.Fail(added.Error!);
             }
 
-        var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var entryName = ServicesComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
         var entrySource = File.ReadAllText(razorPath);
 
         var diagnostics = new Diagnostics();
-        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
+        var compilation = new CompilerClass(registry, diagnostics).Compile(entryName, entrySource);
 
         foreach (var diagnostic in diagnostics.Items)
             context.Diagnostics.Add(diagnostic);

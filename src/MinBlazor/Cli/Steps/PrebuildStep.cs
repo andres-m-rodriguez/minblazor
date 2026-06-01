@@ -1,6 +1,5 @@
 using MinBlazor.Index;
-using MinBlazor.Razor;
-using MinBlazor.Razor.Models;
+using MinBlazor.Parser;
 using MinBlazor.Services;
 
 namespace MinBlazor.Cli.Steps;
@@ -50,7 +49,7 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
         {
-            var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
+            var entryDoc = new RazorParser(File.ReadAllText(razorPath)).Parse();
             var packageNames = new Scanner().Packages(entryDoc).Select(p => p.Name).ToList();
 
             var scanner = new AssemblyScanner();
@@ -78,3 +77,5 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         return null;
     }
 }
+
+
