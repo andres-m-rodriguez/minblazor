@@ -13,7 +13,7 @@ public sealed class Transformer
             switch (node.Kind)
             {
                 case NodeKind.HostTag:
-                    hostTags.Add(new HostTag(node, Markers.Find(node.Text.Span, Markers.HostTag)));
+                    hostTags.Add(new HostTag(node));
                     break;
 
                 case NodeKind.Directive:
@@ -30,3 +30,4 @@ public sealed class Transformer
         return new TransformResult(new Document(document.Source, kept), hostTags, packages);
     }
 }
+

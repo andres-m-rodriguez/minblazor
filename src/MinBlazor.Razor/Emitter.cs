@@ -20,16 +20,19 @@ public sealed class Emitter
         var emitted = new List<string>(hostTags.Count);
 
         foreach (var hostTag in hostTags)
-            emitted.Add(Clean(hostTag.Tag.Text.Span, hostTag.Marker));
+            emitted.Add(Clean(hostTag.Tag.Text.Span));
 
         return emitted;
     }
 
-    private static string Clean(ReadOnlySpan<char> tag, int marker)
+    private static string Clean(ReadOnlySpan<char> tag)
     {
+        var marker = Markers.Find(tag, Markers.HostTag);
         if (marker < 0)
             return tag.ToString();
 
         return string.Concat(tag[..(marker - 1)], tag[(marker + 1 + Markers.HostTag.Length)..]);
     }
 }
+
+
