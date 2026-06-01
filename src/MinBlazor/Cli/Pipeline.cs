@@ -155,14 +155,23 @@ public sealed class Pipeline
 
         var sourceDir = Path.GetDirectoryName(razorPath)!;
         var binDir = Path.Combine(scaffoldDir, "bin", "Debug", "net10.0");
-        var packageNames = result.Compilation.Packages.Select(package => package.Name).ToList();
         var usings = Directory.Exists(binDir)
-            ? PackageComponents.Scan(binDir, packageNames).Namespaces
+            ? PackageComponents.Scan(binDir, PackageNames(result)).Namespaces
             : (IReadOnlyList<string>)[];
 
         new Scaffold().Write(scaffoldDir, sourceDir, result.Compilation, AppInfo.DefaultPort, result.Script?.Outputs, usings);
 
         return Result<string>.Ok(scaffoldDir);
+    }
+
+    // Every package the app references: #:package directives plus Build.cs AddPackage.
+    private static IReadOnlyList<string> PackageNames(Compiled result)
+    {
+        var names = result.Compilation.Packages.Select(package => package.Name);
+        if (result.Script is not null)
+            names = names.Concat(result.Script.Outputs.Packages.Select(package => package.Name));
+
+        return names.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     public static string CacheDirectory(string razorPath)
