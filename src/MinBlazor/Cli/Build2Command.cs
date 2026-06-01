@@ -7,9 +7,8 @@ public sealed class Build2Command(IOutput output)
 {
     public int Execute(Build2Options options)
     {
-        var context = new PipelineContext { RazorPath = options.RazorFile };
+        var context = new PipelineContext(options.RazorFile);
         var result = new PipelineRunner(output).RunUpTo(PipelineStep.Prebuild, context);
-
         if (!result.IsSuccess)
         {
             output.Error(result.Error!);

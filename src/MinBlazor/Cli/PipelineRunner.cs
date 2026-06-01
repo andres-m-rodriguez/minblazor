@@ -8,6 +8,7 @@ public sealed class PipelineRunner(IOutput output)
     private readonly IReadOnlyList<IPipelineStep> _steps =
     [
         new PrebuildStep(output),
+        new CompileStep(),
     ];
 
     public Result RunUpTo(PipelineStep target, PipelineContext context)

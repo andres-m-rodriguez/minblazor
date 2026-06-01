@@ -33,11 +33,18 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
                 return Result.Fail(before.Error!);
 
             foreach (var dir in script.Outputs.SourceDirectories)
-                foreach (var (name, _) in new FolderSourceProvider(dir, SearchOption.AllDirectories).GetComponents())
-                    table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
+            foreach (
+                var (name, _) in new FolderSourceProvider(
+                    dir,
+                    SearchOption.AllDirectories
+                ).GetComponents()
+            )
+                table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
 
             foreach (var component in script.Outputs.Components)
-                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+                table.Add(
+                    new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null)
+                );
         }
 
         var binDir = FindBuildOutput(sourceDir);
@@ -53,12 +60,15 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         }
 
         context.ComponentTable = table;
+        context.Script = script;
         return Result.Ok();
     }
 
     private static string? FindBuildOutput(string sourceDir)
     {
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
+        )
         {
             var binDir = Path.Combine(Pipeline.CacheDirectory(file), "bin", "Debug", "net10.0");
             if (Directory.Exists(binDir))
