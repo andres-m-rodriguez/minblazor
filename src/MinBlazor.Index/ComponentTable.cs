@@ -29,7 +29,7 @@ public sealed class ComponentTable
 
     public bool Contains(string name) => _byName.ContainsKey(name);
 
-    public IReadOnlyList<IndexedComponent> All => _byName.Values.ToList();
+    public IReadOnlyList<IndexedComponent> All => [.. _byName.Values];
 
     public IReadOnlyList<IndexedComponent> OfKind(ComponentKind kind) =>
         _byName.Values.Where(c => c.Kind == kind).ToList();

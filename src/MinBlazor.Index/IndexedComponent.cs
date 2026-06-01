@@ -7,7 +7,4 @@ public enum ComponentKind
     Package,
 }
 
-public sealed record IndexedComponent(
-    string Name,
-    ComponentKind Kind,
-    string? Namespace);
+public sealed record IndexedComponent(string Name, ComponentKind Kind, string? Namespace);
