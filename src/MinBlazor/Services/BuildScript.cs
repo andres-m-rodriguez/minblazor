@@ -67,18 +67,26 @@ public sealed class BuildScript
         return Result<BuildScript?>.Ok(new BuildScript(before, after, sourceDir, outputDir, log));
     }
 
-    public Result RunBeforeCompile() =>
-        Invoke(_beforeCompile, compilation: null, allowComponents: true);
-
-    public Result RunAfterCompile(CompilationInfo compilation) =>
-        Invoke(_afterCompile, compilation, allowComponents: false);
-
-    private Result Invoke(MethodInfo? method, CompilationInfo? compilation, bool allowComponents)
+    public Result RunBeforeCompile()
     {
-        if (method is null)
+        if (_beforeCompile is null)
             return Result.Ok();
 
-        var context = new BuildContext(_outputs, _sourceDir, _outputDir, _environment, compilation, allowComponents, _log);
+        var context = new BeforeCompileContext(_outputs, _sourceDir, _outputDir, _environment, _log);
+        return Invoke(_beforeCompile, context);
+    }
+
+    public Result RunAfterCompile(CompilationInfo compilation)
+    {
+        if (_afterCompile is null)
+            return Result.Ok();
+
+        var context = new AfterCompileContext(_outputs, _sourceDir, _outputDir, _environment, compilation, _log);
+        return Invoke(_afterCompile, context);
+    }
+
+    private Result Invoke(MethodInfo method, BuildContext context)
+    {
         try
         {
             if (method.Invoke(null, [context]) is Task task)

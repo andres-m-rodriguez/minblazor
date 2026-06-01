@@ -14,10 +14,10 @@ using MinBlazor.Build;
 public static class Build
 {
     // Runs before the .razor is compiled. No component model yet.
-    public static void BeforeCompile(BuildContext ctx) { }
+    public static void BeforeCompile(BeforeCompileContext ctx) { }
 
     // Runs after compilation. ctx.Compilation is available (read-only).
-    public static void AfterCompile(BuildContext ctx) { }
+    public static void AfterCompile(AfterCompileContext ctx) { }
 }
 ```
 

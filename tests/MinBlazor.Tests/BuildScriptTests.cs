@@ -10,17 +10,17 @@ public class BuildScriptTests
 
         public static class Build
         {
-            public static void BeforeCompile(BuildContext ctx)
+            public static void BeforeCompile(BeforeCompileContext ctx)
             {
                 ctx.AddOption("Greeting", "hi");
                 ctx.AddComponent("Generated", "<p>generated</p>");
                 ctx.AddPackage("Humanizer", "2.14.1");
             }
 
-            public static void AfterCompile(BuildContext ctx)
+            public static void AfterCompile(AfterCompileContext ctx)
             {
                 ctx.AddHeadTag("<meta name=\"x\" content=\"y\" />");
-                ctx.Log($"components: {ctx.Compilation!.Components.Count}");
+                ctx.Log($"components: {ctx.Compilation.Components.Count}");
             }
         }
         """;
@@ -68,7 +68,7 @@ public class BuildScriptTests
     }
 
     [Test]
-    public async Task AddComponentInAfterCompileIsIgnoredWithWarning()
+    public async Task AddComponent_IsNotAvailableInAfterCompile()
     {
         var dir = NewDir();
         File.WriteAllText(Path.Combine(dir, BuildScript.FileName), """
@@ -76,16 +76,17 @@ public class BuildScriptTests
 
             public static class Build
             {
-                public static void AfterCompile(BuildContext ctx) => ctx.AddComponent("Late", "<p/>");
+                public static void AfterCompile(AfterCompileContext ctx)
+                {
+                    // AddComponent doesn't exist on AfterCompileContext — compile error
+                }
             }
             """);
 
-        var logs = new List<string>();
-        var script = BuildScript.Load(dir, dir, logs.Add).Value!;
-
-        await Assert.That(script.RunAfterCompile(new CompilationInfo("Index", ["Index"], [])).IsSuccess).IsTrue();
-        await Assert.That(script.Outputs.Components).IsEmpty();
-        await Assert.That(logs.Any(line => line.Contains("BeforeCompile"))).IsTrue();
+        var loaded = BuildScript.Load(dir, dir, _ => { });
+        await Assert.That(loaded.IsSuccess).IsTrue();
+        await Assert.That(loaded.Value!.RunAfterCompile(new CompilationInfo("Index", ["Index"], [])).IsSuccess).IsTrue();
+        await Assert.That(loaded.Value!.Outputs.Components).IsEmpty();
     }
 
     [Test]
@@ -100,7 +101,7 @@ public class BuildScriptTests
 
             public static class Build
             {
-                public static void BeforeCompile(BuildContext ctx) => ctx.AddSourceDirectory("Models");
+                public static void BeforeCompile(BeforeCompileContext ctx) => ctx.AddSourceDirectory("Models");
             }
             """);
 

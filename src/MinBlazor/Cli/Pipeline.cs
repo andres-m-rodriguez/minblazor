@@ -8,18 +8,19 @@ using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
-public sealed record Compiled(Compilation Compilation, BuildScript? Script, IReadOnlyList<Diagnostic> Diagnostics);
+public sealed record Compiled(
+    Compilation Compilation,
+    BuildScript? Script,
+    IReadOnlyList<Diagnostic> Diagnostics
+);
 
 internal sealed record ResolvedRegistry(ComponentRegistry Registry, BuildScript? Script);
 
-public sealed class Pipeline
+public sealed class Pipeline(IOutput output)
 {
-    private readonly IOutput _output;
-
-    public Pipeline(IOutput output) => _output = output;
-
     // Indexes the folder and runs Build.cs BeforeCompile, then compiles the entry and its
     // dependency closure. No scaffold is written and dotnet is not invoked.
+
     public Result<Compiled> Compile(string razorPath, string scaffoldDir)
     {
         var resolved = Resolve(razorPath, scaffoldDir);
@@ -30,9 +31,14 @@ public sealed class Pipeline
         var entrySource = File.ReadAllText(razorPath);
 
         var diagnostics = new Diagnostics();
-        var compilation = new Compiler(resolved.Value!.Registry, diagnostics).Compile(entryName, entrySource);
+        var compilation = new Compiler(resolved.Value!.Registry, diagnostics).Compile(
+            entryName,
+            entrySource
+        );
 
-        return Result<Compiled>.Ok(new Compiled(compilation, resolved.Value!.Script, diagnostics.Items));
+        return Result<Compiled>.Ok(
+            new Compiled(compilation, resolved.Value!.Script, diagnostics.Items)
+        );
     }
 
     // Every component a file can use: the .razor in its folder, Build.cs virtual components,
@@ -51,7 +57,11 @@ public sealed class Pipeline
         var sourceDir = Path.GetDirectoryName(razorPath)!;
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
-            foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)).Components)
+            foreach (
+                var component in PackageComponents
+                    .Scan(binDir, FolderPackages(sourceDir))
+                    .Components
+            )
                 names.Add(component);
 
         return Result<IReadOnlyList<string>>.Ok(names.ToList());
@@ -61,7 +71,9 @@ public sealed class Pipeline
     // the entry that was built, so accept any built scaffold belonging to this folder.
     private static string? FindBuildOutput(string sourceDir)
     {
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
+        )
         {
             var binDir = Path.Combine(CacheDirectory(file), "bin", "Debug", "net10.0");
             if (Directory.Exists(binDir))
@@ -76,7 +88,9 @@ public sealed class Pipeline
     {
         var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
+        )
         {
             var document = new Parser(new Lexer(File.ReadAllText(file))).Parse();
             foreach (var package in new Transformer().Transform(document).Packages)
@@ -95,7 +109,7 @@ public sealed class Pipeline
         if (!indexed.IsSuccess)
             return Result<ResolvedRegistry>.Fail(indexed.Error!);
 
-        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, _output.Info);
+        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, output.Info);
         if (!scriptResult.IsSuccess)
             return Result<ResolvedRegistry>.Fail(scriptResult.Error!);
 
@@ -126,7 +140,7 @@ public sealed class Pipeline
 
         if (clean && Directory.Exists(scaffoldDir))
         {
-            _output.Info("Cleaning cache");
+            output.Info("Cleaning cache");
             Directory.Delete(scaffoldDir, recursive: true);
         }
 
@@ -137,7 +151,7 @@ public sealed class Pipeline
         var result = compiled.Value!;
 
         foreach (var diagnostic in result.Diagnostics)
-            _output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
+            output.Info($"{diagnostic.Severity}: {diagnostic.Message}");
 
         if (result.Script is not null)
         {
@@ -146,11 +160,16 @@ public sealed class Pipeline
                 return Result<string>.Fail(after.Error!);
 
             var duplicate = result
-                .Script.Outputs.Sources.GroupBy(source => source.FileName, StringComparer.OrdinalIgnoreCase)
+                .Script.Outputs.Sources.GroupBy(
+                    source => source.FileName,
+                    StringComparer.OrdinalIgnoreCase
+                )
                 .FirstOrDefault(group => group.Count() > 1);
 
             if (duplicate is not null)
-                return Result<string>.Fail($"Two build source files are named '{duplicate.Key}'. Source file names must be unique.");
+                return Result<string>.Fail(
+                    $"Two build source files are named '{duplicate.Key}'. Source file names must be unique."
+                );
         }
 
         var sourceDir = Path.GetDirectoryName(razorPath)!;
@@ -159,7 +178,14 @@ public sealed class Pipeline
             ? PackageComponents.Scan(binDir, PackageNames(result)).Namespaces
             : (IReadOnlyList<string>)[];
 
-        new Scaffold().Write(scaffoldDir, sourceDir, result.Compilation, AppInfo.DefaultPort, result.Script?.Outputs, usings);
+        new Scaffold().Write(
+            scaffoldDir,
+            sourceDir,
+            result.Compilation,
+            AppInfo.DefaultPort,
+            result.Script?.Outputs,
+            usings
+        );
 
         return Result<string>.Ok(scaffoldDir);
     }
@@ -180,7 +206,9 @@ public sealed class Pipeline
         if (OperatingSystem.IsWindows())
             path = path.ToLowerInvariant();
 
-        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16].ToLowerInvariant();
+        var hash = Convert
+            .ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16]
+            .ToLowerInvariant();
         return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
 
