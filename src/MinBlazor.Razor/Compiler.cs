@@ -1,3 +1,4 @@
+using MinBlazor.Compiler;
 using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
