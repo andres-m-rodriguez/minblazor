@@ -11,16 +11,22 @@ public sealed class CompileStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
-        var virtuals = context.Script?.Outputs.Components
-            .ToDictionary(c => c.Name, c => c.Source, StringComparer.Ordinal)
-            ?? [];
+        var virtuals =
+            context.Script?.Outputs.Components.ToDictionary(
+                c => c.Name,
+                c => c.Source,
+                StringComparer.Ordinal
+            ) ?? [];
 
         var resolver = new IndexedComponentResolver(
             context.ComponentTable!,
             context.SourcePaths,
-            virtuals);
+            virtuals
+        );
 
-        var entryName = ComponentNameParser.From(Path.GetFileNameWithoutExtension(context.RazorPath));
+        var entryName = ComponentNameParser.From(
+            Path.GetFileNameWithoutExtension(context.RazorPath)
+        );
         var entrySource = File.ReadAllText(context.RazorPath);
 
         var diagnostics = new Diagnostics();
