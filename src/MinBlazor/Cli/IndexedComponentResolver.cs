@@ -17,21 +17,19 @@ public sealed class IndexedComponentResolver(
         if (component is null)
             return ResolveResult.NotFound;
 
-        switch (component.Kind)
+        return component.Kind switch
         {
-            case ComponentKind.Source:
-                if (!sourcePaths.TryGetValue(name, out var path))
-                    return ResolveResult.NotFound;
-                source = File.ReadAllText(path);
-                return ResolveResult.Resolved;
+            ComponentKind.Package => ResolveResult.External,
 
-            case ComponentKind.Virtual:
-                if (!virtuals.TryGetValue(name, out source))
-                    return ResolveResult.NotFound;
-                return ResolveResult.Resolved;
+            ComponentKind.Source when sourcePaths.TryGetValue(name, out var path)
+                => (source = File.ReadAllText(path)) is not null
+                    ? ResolveResult.Resolved
+                    : ResolveResult.NotFound,
 
-            default:
-                return ResolveResult.External;
-        }
+            ComponentKind.Virtual when virtuals.TryGetValue(name, out source)
+                => ResolveResult.Resolved,
+
+            _ => ResolveResult.NotFound,
+        };
     }
 }

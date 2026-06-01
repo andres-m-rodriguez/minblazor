@@ -1,5 +1,5 @@
-using MinBlazor.Core;
 using MinBlazor.Compiler;
+using MinBlazor.Core;
 using MinBlazor.Parser;
 using MinBlazor.Services;
 using RazorCompiler = MinBlazor.Compiler.RazorCompiler;
@@ -40,4 +40,3 @@ public sealed class CompileStep : IPipelineStep
         return Result.Ok();
     }
 }
-

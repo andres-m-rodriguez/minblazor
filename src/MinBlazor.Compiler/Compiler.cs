@@ -72,4 +72,3 @@ public sealed class RazorCompiler(IComponentResolver resolver, IDiagnostics diag
         );
     }
 }
-

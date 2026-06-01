@@ -84,4 +84,3 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         return null;
     }
 }
-
