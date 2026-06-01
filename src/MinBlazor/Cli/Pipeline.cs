@@ -54,7 +54,7 @@ public sealed class Pipeline(IOutput output)
         foreach (var (name, _) in new FolderSourceProvider(sourceDir).GetComponents())
             table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
 
-        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, output.Info);
+        var scriptResult = new BuildScriptLoader(sourceDir, scaffoldDir, output.Info).Load();
         if (!scriptResult.IsSuccess)
             return Result<ComponentTable>.Fail(scriptResult.Error!);
 
@@ -159,7 +159,7 @@ public sealed class Pipeline(IOutput output)
         if (!indexed.IsSuccess)
             return Result<ResolvedRegistry>.Fail(indexed.Error!);
 
-        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, output.Info);
+        var scriptResult = new BuildScriptLoader(sourceDir, scaffoldDir, output.Info).Load();
         if (!scriptResult.IsSuccess)
             return Result<ResolvedRegistry>.Fail(scriptResult.Error!);
 
@@ -294,3 +294,4 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
+

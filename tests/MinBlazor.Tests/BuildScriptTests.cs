@@ -31,7 +31,7 @@ public class BuildScriptTests
         var dir = NewDir();
         File.WriteAllText(Path.Combine(dir, BuildScript.FileName), Script);
 
-        var loaded = BuildScript.Load(dir, dir, _ => { });
+        var loaded = new BuildScriptLoader(dir, dir, _ => { }).Load();
         await Assert.That(loaded.IsSuccess).IsTrue();
         var script = loaded.Value!;
         await Assert.That(script).IsNotNull();
@@ -49,7 +49,7 @@ public class BuildScriptTests
     [Test]
     public async Task NoBuildFileLoadsToNull()
     {
-        var loaded = BuildScript.Load(NewDir(), NewDir(), _ => { });
+        var loaded = new BuildScriptLoader(NewDir(), NewDir(), _ => { }).Load();
 
         await Assert.That(loaded.IsSuccess).IsTrue();
         await Assert.That(loaded.Value).IsNull();
@@ -61,7 +61,7 @@ public class BuildScriptTests
         var dir = NewDir();
         File.WriteAllText(Path.Combine(dir, BuildScript.FileName), "this is not valid c#");
 
-        var loaded = BuildScript.Load(dir, dir, _ => { });
+        var loaded = new BuildScriptLoader(dir, dir, _ => { }).Load();
 
         await Assert.That(loaded.IsSuccess).IsFalse();
         await Assert.That(loaded.Error).Contains(BuildScript.FileName);
@@ -83,7 +83,7 @@ public class BuildScriptTests
             }
             """);
 
-        var loaded = BuildScript.Load(dir, dir, _ => { });
+        var loaded = new BuildScriptLoader(dir, dir, _ => { }).Load();
         await Assert.That(loaded.IsSuccess).IsTrue();
         await Assert.That(loaded.Value!.RunAfterCompile(new CompilationInfo("Index", ["Index"], [])).IsSuccess).IsTrue();
         await Assert.That(loaded.Value!.Outputs.Components).IsEmpty();
@@ -105,7 +105,7 @@ public class BuildScriptTests
             }
             """);
 
-        var script = BuildScript.Load(dir, dir, _ => { }).Value!;
+        var script = new BuildScriptLoader(dir, dir, _ => { }).Load().Value!;
         await Assert.That(script.RunBeforeCompile().IsSuccess).IsTrue();
 
         var names = script.Outputs.Sources.Select(source => source.FileName).ToHashSet();
@@ -121,3 +121,4 @@ public class BuildScriptTests
         return dir;
     }
 }
+
