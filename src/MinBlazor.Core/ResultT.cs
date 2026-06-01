@@ -7,14 +7,15 @@ public readonly record struct Result<T>
     [MemberNotNullWhen(true, nameof(Value))]
     public bool IsSuccess { get; }
 
-    [MaybeNull] public T Value { get; }
+    [MaybeNull]
+    public T Value { get; }
 
     public string? Error { get; }
 
     private Result(bool isSuccess, [AllowNull] T value, string? error)
     {
         IsSuccess = isSuccess;
-        Value = value;
+        Value = value!;
         Error = error;
     }
 
