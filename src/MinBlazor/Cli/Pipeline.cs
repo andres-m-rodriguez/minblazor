@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using MinBlazor.Build.Models;
+using MinBlazor.Index;
 using MinBlazor.Models;
 using MinBlazor.Razor;
 using MinBlazor.Razor.Models;
@@ -187,7 +188,30 @@ public sealed class Pipeline(IOutput output)
             usings
         );
 
+        BuildTable(sourceDir, binDir, result);
+
         return Result<string>.Ok(scaffoldDir);
+    }
+
+    private static ComponentTable BuildTable(string sourceDir, string binDir, Compiled result)
+    {
+        var table = new ComponentTable();
+
+        foreach (var (name, _) in new FolderSourceProvider(sourceDir).GetComponents())
+            table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
+
+        if (result.Script is not null)
+            foreach (var component in result.Script.Outputs.Components)
+                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+
+        if (Directory.Exists(binDir))
+        {
+            var scanner = new AssemblyScanner(new BinDirectoryAssemblyProvider(binDir));
+            foreach (var component in scanner.Scan(PackageNames(result)))
+                table.Add(component);
+        }
+
+        return table;
     }
 
     // Every package the app references: #:package directives plus Build.cs AddPackage.

@@ -49,10 +49,13 @@ public sealed class AssemblyScanner(IAssemblyProvider provider)
                     continue;
 
                 var ns = type.ContainingNamespace.ToDisplayString();
-                results.Add(new IndexedComponent(
-                    type.Name,
-                    ComponentKind.Package,
-                    string.IsNullOrEmpty(ns) ? null : ns));
+                results.Add(
+                    new IndexedComponent(
+                        type.Name,
+                        ComponentKind.Package,
+                        string.IsNullOrEmpty(ns) ? null : ns
+                    )
+                );
             }
         }
 

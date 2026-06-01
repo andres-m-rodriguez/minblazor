@@ -9,20 +9,23 @@ namespace MinBlazor.Lsp;
 
 public sealed class ComponentCompletionHandler : ICompletionHandler
 {
-    private static readonly TextDocumentSelector Selector = TextDocumentSelector.ForPattern("**/*.razor");
+    private static readonly TextDocumentSelector Selector = TextDocumentSelector.ForPattern(
+        "**/*.razor"
+    );
 
     private readonly DocumentStore _documents;
 
     public ComponentCompletionHandler(DocumentStore documents) => _documents = documents;
 
-    public CompletionRegistrationOptions GetRegistrationOptions(CompletionCapability capability, ClientCapabilities clientCapabilities) =>
-        new()
-        {
-            DocumentSelector = Selector,
-            TriggerCharacters = new Container<string>("<"),
-        };
+    public CompletionRegistrationOptions GetRegistrationOptions(
+        CompletionCapability capability,
+        ClientCapabilities clientCapabilities
+    ) => new() { DocumentSelector = Selector, TriggerCharacters = new Container<string>("<") };
 
-    public Task<CompletionList> Handle(CompletionParams request, CancellationToken cancellationToken)
+    public Task<CompletionList> Handle(
+        CompletionParams request,
+        CancellationToken cancellationToken
+    )
     {
         var text = _documents.Get(request.TextDocument.Uri);
         if (text is null)
@@ -42,8 +45,10 @@ public sealed class ComponentCompletionHandler : ICompletionHandler
 
         var current = ComponentName.From(Path.GetFileNameWithoutExtension(path));
 
-        var items = available.Value!
-            .Where(name => name != current && name.StartsWith(partial, StringComparison.OrdinalIgnoreCase))
+        var items = available
+            .Value!.Where(name =>
+                name != current && name.StartsWith(partial, StringComparison.OrdinalIgnoreCase)
+            )
             .Select(name => new CompletionItem
             {
                 Label = name,
