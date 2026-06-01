@@ -7,7 +7,8 @@ public sealed class Build2Command(IOutput output)
 {
     public int Execute(Build2Options options)
     {
-        var table = new Pipeline(output).Prebuild(options.RazorFile);
+        var pipeline = new Pipeline(output);
+        var table = pipeline.Prebuild(options.RazorFile);
         if (!table.IsSuccess)
         {
             output.Error(table.Error!);
