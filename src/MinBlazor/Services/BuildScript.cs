@@ -24,7 +24,13 @@ public sealed class BuildScript
     private readonly Action<string> _log;
     private readonly IReadOnlyDictionary<string, string> _environment;
 
-    private BuildScript(MethodInfo? before, MethodInfo? after, string sourceDir, string outputDir, Action<string> log)
+    private BuildScript(
+        MethodInfo? before,
+        MethodInfo? after,
+        string sourceDir,
+        string outputDir,
+        Action<string> log
+    )
     {
         _beforeCompile = before;
         _afterCompile = after;
@@ -47,7 +53,11 @@ public sealed class BuildScript
             "MinBlazorBuildScript",
             [tree],
             References(),
-            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
+            new CSharpCompilationOptions(
+                OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable
+            )
+        );
 
         using var stream = new MemoryStream();
         var emit = compilation.Emit(stream);
@@ -57,12 +67,19 @@ public sealed class BuildScript
         var assembly = Assembly.Load(stream.ToArray());
         var buildType = assembly.GetTypes().FirstOrDefault(type => type.Name == TypeName);
         if (buildType is null)
-            return Result<BuildScript?>.Fail($"{FileName} must define a static class named '{TypeName}'.");
+            return Result<BuildScript?>.Fail(
+                $"{FileName} must define a static class named '{TypeName}'."
+            );
 
-        var before = buildType.GetMethod("BeforeCompile", BindingFlags.Public | BindingFlags.Static);
+        var before = buildType.GetMethod(
+            "BeforeCompile",
+            BindingFlags.Public | BindingFlags.Static
+        );
         var after = buildType.GetMethod("AfterCompile", BindingFlags.Public | BindingFlags.Static);
         if (before is null && after is null)
-            return Result<BuildScript?>.Fail($"{FileName}: '{TypeName}' has no BeforeCompile or AfterCompile method.");
+            return Result<BuildScript?>.Fail(
+                $"{FileName}: '{TypeName}' has no BeforeCompile or AfterCompile method."
+            );
 
         return Result<BuildScript?>.Ok(new BuildScript(before, after, sourceDir, outputDir, log));
     }
@@ -72,7 +89,13 @@ public sealed class BuildScript
         if (_beforeCompile is null)
             return Result.Ok();
 
-        var context = new BeforeCompileContext(_outputs, _sourceDir, _outputDir, _environment, _log);
+        var context = new BeforeCompileContext(
+            _outputs,
+            _sourceDir,
+            _outputDir,
+            _environment,
+            _log
+        );
         return Invoke(_beforeCompile, context);
     }
 
@@ -81,7 +104,14 @@ public sealed class BuildScript
         if (_afterCompile is null)
             return Result.Ok();
 
-        var context = new AfterCompileContext(_outputs, _sourceDir, _outputDir, _environment, compilation, _log);
+        var context = new AfterCompileContext(
+            _outputs,
+            _sourceDir,
+            _outputDir,
+            _environment,
+            compilation,
+            _log
+        );
         return Invoke(_afterCompile, context);
     }
 
@@ -94,7 +124,9 @@ public sealed class BuildScript
         }
         catch (TargetInvocationException ex)
         {
-            return Result.Fail($"{FileName} {method.Name} failed: {ex.InnerException?.Message ?? ex.Message}");
+            return Result.Fail(
+                $"{FileName} {method.Name} failed: {ex.InnerException?.Message ?? ex.Message}"
+            );
         }
         catch (Exception ex)
         {
@@ -131,13 +163,19 @@ public sealed class BuildScript
         paths.Add(typeof(BuildContext).Assembly.Location);
         paths.Add(typeof(PackageReference).Assembly.Location);
 
-        return paths.Select(path => (MetadataReference)MetadataReference.CreateFromFile(path)).ToList();
+        return paths
+            .Select(path => (MetadataReference)MetadataReference.CreateFromFile(path))
+            .ToList();
     }
 
     private static string FormatErrors(string path, EmitResult emit)
     {
         var builder = new StringBuilder($"Failed to compile {Path.GetFileName(path)}:");
-        foreach (var diagnostic in emit.Diagnostics.Where(diagnostic => diagnostic.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))
+        foreach (
+            var diagnostic in emit.Diagnostics.Where(diagnostic =>
+                diagnostic.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error
+            )
+        )
             builder.Append("\n  ").Append(diagnostic);
 
         return builder.ToString();

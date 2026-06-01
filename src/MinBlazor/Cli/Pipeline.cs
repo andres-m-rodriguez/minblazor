@@ -67,7 +67,9 @@ public sealed class Pipeline(IOutput output)
                 return Result<ComponentTable>.Fail(before.Error!);
 
             foreach (var component in script.Outputs.Components)
-                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+                table.Add(
+                    new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null)
+                );
         }
 
         var binDir = FindBuildOutput(sourceDir);
