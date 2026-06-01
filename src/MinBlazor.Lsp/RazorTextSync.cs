@@ -7,39 +7,52 @@ using OmniSharp.Extensions.LanguageServer.Protocol.Server.Capabilities;
 
 namespace MinBlazor.Lsp;
 
-public sealed class RazorTextSync : TextDocumentSyncHandlerBase
+public sealed class RazorTextSync(DocumentStore documents) : TextDocumentSyncHandlerBase
 {
-    private static readonly TextDocumentSelector Selector = TextDocumentSelector.ForPattern("**/*.razor");
+    private static readonly TextDocumentSelector Selector = TextDocumentSelector.ForPattern(
+        "**/*.razor"
+    );
 
-    private readonly DocumentStore _documents;
+    public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) =>
+        new(uri, "razor");
 
-    public RazorTextSync(DocumentStore documents) => _documents = documents;
-
-    public override TextDocumentAttributes GetTextDocumentAttributes(DocumentUri uri) => new(uri, "razor");
-
-    public override Task<Unit> Handle(DidOpenTextDocumentParams request, CancellationToken cancellationToken)
+    public override Task<Unit> Handle(
+        DidOpenTextDocumentParams request,
+        CancellationToken cancellationToken
+    )
     {
-        _documents.Set(request.TextDocument.Uri, request.TextDocument.Text);
+        documents.Set(request.TextDocument.Uri, request.TextDocument.Text);
         return Unit.Task;
     }
 
-    public override Task<Unit> Handle(DidChangeTextDocumentParams request, CancellationToken cancellationToken)
+    public override Task<Unit> Handle(
+        DidChangeTextDocumentParams request,
+        CancellationToken cancellationToken
+    )
     {
         var change = request.ContentChanges.FirstOrDefault();
         if (change is not null)
-            _documents.Set(request.TextDocument.Uri, change.Text);
+            documents.Set(request.TextDocument.Uri, change.Text);
 
         return Unit.Task;
     }
 
-    public override Task<Unit> Handle(DidSaveTextDocumentParams request, CancellationToken cancellationToken) => Unit.Task;
+    public override Task<Unit> Handle(
+        DidSaveTextDocumentParams request,
+        CancellationToken cancellationToken
+    ) => Unit.Task;
 
-    public override Task<Unit> Handle(DidCloseTextDocumentParams request, CancellationToken cancellationToken)
+    public override Task<Unit> Handle(
+        DidCloseTextDocumentParams request,
+        CancellationToken cancellationToken
+    )
     {
-        _documents.Remove(request.TextDocument.Uri);
+        documents.Remove(request.TextDocument.Uri);
         return Unit.Task;
     }
 
-    protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(TextSynchronizationCapability capability, ClientCapabilities clientCapabilities) =>
-        new() { DocumentSelector = Selector, Change = TextDocumentSyncKind.Full };
+    protected override TextDocumentSyncRegistrationOptions CreateRegistrationOptions(
+        TextSynchronizationCapability capability,
+        ClientCapabilities clientCapabilities
+    ) => new() { DocumentSelector = Selector, Change = TextDocumentSyncKind.Full };
 }

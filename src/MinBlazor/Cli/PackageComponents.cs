@@ -4,7 +4,10 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace MinBlazor.Cli;
 
-public sealed record PackageScan(IReadOnlyList<string> Components, IReadOnlyList<string> Namespaces);
+public sealed record PackageScan(
+    IReadOnlyList<string> Components,
+    IReadOnlyList<string> Namespaces
+);
 
 // Finds Blazor components (public, non-abstract IComponent types) inside the assemblies of
 // the given packages, along with their namespaces. The scaffold's build output holds every
@@ -16,7 +19,8 @@ public static class PackageComponents
 
     private static readonly PackageScan Empty = new([], []);
 
-    private static readonly ConcurrentDictionary<string, (DateTime Stamp, PackageScan Scan)> Cache = new();
+    private static readonly ConcurrentDictionary<string, (DateTime Stamp, PackageScan Scan)> Cache =
+        new();
 
     public static PackageScan Scan(string binDir, IReadOnlyCollection<string> packageNames)
     {
@@ -24,7 +28,10 @@ public static class PackageComponents
             return Empty;
 
         var stamp = Directory.GetLastWriteTimeUtc(binDir);
-        var key = binDir + "|" + string.Join(",", packageNames.OrderBy(name => name, StringComparer.Ordinal));
+        var key =
+            binDir
+            + "|"
+            + string.Join(",", packageNames.OrderBy(name => name, StringComparer.Ordinal));
 
         if (Cache.TryGetValue(key, out var cached) && cached.Stamp == stamp)
             return cached.Scan;
@@ -64,10 +71,12 @@ public static class PackageComponents
 
             foreach (var type in Types(assembly.GlobalNamespace))
             {
-                if (type.DeclaredAccessibility != Accessibility.Public
+                if (
+                    type.DeclaredAccessibility != Accessibility.Public
                     || type.TypeKind != TypeKind.Class
                     || type.IsAbstract
-                    || !type.AllInterfaces.Contains(component, SymbolEqualityComparer.Default))
+                    || !type.AllInterfaces.Contains(component, SymbolEqualityComparer.Default)
+                )
                     continue;
 
                 names.Add(type.Name);
@@ -87,7 +96,7 @@ public static class PackageComponents
             yield return type;
 
         foreach (var child in ns.GetNamespaceMembers())
-            foreach (var type in Types(child))
-                yield return type;
+        foreach (var type in Types(child))
+            yield return type;
     }
 }
