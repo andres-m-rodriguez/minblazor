@@ -35,16 +35,40 @@ public sealed class Pipeline
         return Result<Compiled>.Ok(new Compiled(compilation, resolved.Value!.Script, diagnostics.Items));
     }
 
-    // Every component a file can use: the .razor in its folder plus Build.cs virtual
-    // components. Used by the language server for component completion.
+    // Every component a file can use: the .razor in its folder, Build.cs virtual components,
+    // and the components from any #:package (scanned from the scaffold build output). Used by
+    // the language server for component completion.
     public Result<IReadOnlyList<string>> AvailableComponents(string razorPath)
     {
-        var resolved = Resolve(razorPath, CacheDirectory(razorPath));
+        var scaffoldDir = CacheDirectory(razorPath);
+
+        var resolved = Resolve(razorPath, scaffoldDir);
         if (!resolved.IsSuccess)
             return Result<IReadOnlyList<string>>.Fail(resolved.Error!);
 
-        var names = resolved.Value!.Registry.Names.OrderBy(name => name, StringComparer.Ordinal).ToList();
-        return Result<IReadOnlyList<string>>.Ok(names);
+        var names = new SortedSet<string>(resolved.Value!.Registry.Names, StringComparer.Ordinal);
+
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var binDir = Path.Combine(scaffoldDir, "bin", "Debug", "net10.0");
+        foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)))
+            names.Add(component);
+
+        return Result<IReadOnlyList<string>>.Ok(names.ToList());
+    }
+
+    // Union of #:package directives across every .razor in the folder.
+    private static IReadOnlyCollection<string> FolderPackages(string sourceDir)
+    {
+        var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        {
+            var document = new Parser(new Lexer(File.ReadAllText(file))).Parse();
+            foreach (var package in new Transformer().Transform(document).Packages)
+                packages.Add(package.Name);
+        }
+
+        return packages;
     }
 
     private Result<ResolvedRegistry> Resolve(string razorPath, string scaffoldDir)
