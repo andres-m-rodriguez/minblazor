@@ -9,4 +9,3 @@ public sealed record CompiledComponent(
     IReadOnlySet<string> References,
     IReadOnlyList<PackageReference> Packages
 );
-
