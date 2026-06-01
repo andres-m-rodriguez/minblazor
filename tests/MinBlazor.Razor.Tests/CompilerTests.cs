@@ -45,7 +45,7 @@ public class CompilerTests
         await Assert.That(names.Contains("NavLink")).IsFalse();
 
         await Assert.That(diagnostics.Items.Count).IsEqualTo(1);
-        await Assert.That(diagnostics.Items[0].Severity).IsEqualTo(MinBlazor.Razor.Models.DiagnosticSeverity.Warning);
+        await Assert.That(diagnostics.Items[0].Severity).IsEqualTo(MinBlazor.Core.DiagnosticSeverity.Warning);
     }
 
     [Test]
@@ -77,5 +77,6 @@ public class CompilerTests
         await Assert.That(names[1]).IsEqualTo("Zebra");
     }
 }
+
 
 
