@@ -2,6 +2,7 @@ namespace MinBlazor.Parser;
 
 public sealed record TransformResult(
     Document Document,
-    IReadOnlyList<HostTag> HostTags,
+    IReadOnlyList<RazorNode> HostTags,
     IReadOnlyList<PackageReference> Packages
 );
+

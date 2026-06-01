@@ -15,12 +15,12 @@ public sealed class Emitter
         return builder.ToString();
     }
 
-    public IReadOnlyList<string> EmitHostTags(Document document, IReadOnlyList<HostTag> hostTags)
+    public IReadOnlyList<string> EmitHostTags(Document document, IReadOnlyList<RazorNode> hostTags)
     {
         var emitted = new List<string>(hostTags.Count);
 
         foreach (var hostTag in hostTags)
-            emitted.Add(Clean(hostTag.Tag.Text.Span));
+            emitted.Add(Clean(hostTag.Text.Span));
 
         return emitted;
     }
@@ -34,5 +34,7 @@ public sealed class Emitter
         return string.Concat(tag[..(marker - 1)], tag[(marker + 1 + Markers.HostTag.Length)..]);
     }
 }
+
+
 
 

@@ -14,7 +14,7 @@ public class TransformerTests
 
         await Assert.That(result.HostTags.Count).IsEqualTo(1);
         await Assert
-            .That(result.HostTags[0].Tag.Text.ToString())
+            .That(result.HostTags[0].Text.ToString())
             .IsEqualTo("<script @hostTag src=\"x.js\"></script>");
         await Assert.That(new Emitter().Emit(result.Document)).IsEqualTo("<div><Counter /></div>");
     }
@@ -35,5 +35,6 @@ public class TransformerTests
         await Assert.That(new Emitter().Emit(result.Document)).IsEqualTo("<h1>Hi</h1>");
     }
 }
+
 
 

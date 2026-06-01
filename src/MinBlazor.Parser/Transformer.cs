@@ -5,7 +5,7 @@ public sealed class Transformer
     public TransformResult Transform(Document document)
     {
         var kept = new List<RazorNode>();
-        var hostTags = new List<HostTag>();
+        var hostTags = new List<RazorNode>();
         var packages = new List<PackageReference>();
 
         foreach (var node in document.Nodes)
@@ -13,7 +13,7 @@ public sealed class Transformer
             switch (node.Kind)
             {
                 case NodeKind.HostTag:
-                    hostTags.Add(new HostTag(node));
+                    hostTags.Add(node);
                     break;
 
                 case NodeKind.Directive:
@@ -30,4 +30,5 @@ public sealed class Transformer
         return new TransformResult(new Document(document.Source, kept), hostTags, packages);
     }
 }
+
 

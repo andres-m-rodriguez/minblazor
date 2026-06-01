@@ -5,7 +5,8 @@ namespace MinBlazor.Compiler;
 public sealed record CompiledComponent(
     string Name,
     Document Document,
-    IReadOnlyList<HostTag> HostTags,
+    IReadOnlyList<RazorNode> HostTags,
     IReadOnlySet<string> References,
     IReadOnlyList<PackageReference> Packages
 );
+
