@@ -79,7 +79,9 @@ public sealed class Pipeline(IOutput output)
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
         {
-            var packageNames = FolderPackages(sourceDir)
+            var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
+            var packageNames = new Scanner().Packages(entryDoc)
+                .Select(p => p.Name)
                 .Concat(script?.Outputs.Packages.Select(p => p.Name) ?? [])
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
@@ -109,12 +111,12 @@ public sealed class Pipeline(IOutput output)
         var sourceDir = Path.GetDirectoryName(razorPath)!;
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
-            foreach (
-                var component in PackageComponents
-                    .Scan(binDir, FolderPackages(sourceDir))
-                    .Components
-            )
+        {
+            var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
+            var packageNames = new Scanner().Packages(entryDoc).Select(p => p.Name).ToList();
+            foreach (var component in PackageComponents.Scan(binDir, packageNames).Components)
                 names.Add(component);
+        }
 
         return Result<IReadOnlyList<string>>.Ok(names.ToList());
     }
@@ -135,23 +137,6 @@ public sealed class Pipeline(IOutput output)
         return null;
     }
 
-    // Union of #:package directives across every .razor in the folder.
-    private static IReadOnlyCollection<string> FolderPackages(string sourceDir)
-    {
-        var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var scanner = new Scanner();
-
-        foreach (
-            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
-        )
-        {
-            var document = new Parser(new Lexer(File.ReadAllText(file))).Parse();
-            foreach (var package in scanner.Packages(document))
-                packages.Add(package.Name);
-        }
-
-        return packages;
-    }
 
     private Result<ResolvedRegistry> Resolve(string razorPath, string scaffoldDir)
     {
