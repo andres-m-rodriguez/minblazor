@@ -84,7 +84,8 @@ public sealed class Pipeline(IOutput output)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            var scanner = new AssemblyScanner(new BinDirectoryAssemblyProvider(binDir));
+            var scanner = new AssemblyScanner();
+            scanner.Load(new BinDirectoryAssemblyProvider(binDir));
             foreach (var component in scanner.Scan(packageNames))
                 table.Add(component);
         }
@@ -140,7 +141,9 @@ public sealed class Pipeline(IOutput output)
         var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var scanner = new Scanner();
 
-        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
+        )
         {
             var document = new Parser(new Lexer(File.ReadAllText(file))).Parse();
             foreach (var package in scanner.Packages(document))
@@ -257,7 +260,8 @@ public sealed class Pipeline(IOutput output)
 
         if (Directory.Exists(binDir))
         {
-            var scanner = new AssemblyScanner(new BinDirectoryAssemblyProvider(binDir));
+            var scanner = new AssemblyScanner();
+            scanner.Load(new BinDirectoryAssemblyProvider(binDir));
             foreach (var component in scanner.Scan(PackageNames(result)))
                 table.Add(component);
         }
