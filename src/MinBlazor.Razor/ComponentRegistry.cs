@@ -20,6 +20,8 @@ public sealed class ComponentRegistry : IComponentResolver
 
     public bool Contains(string name) => _sources.ContainsKey(name);
 
+    public IReadOnlyCollection<string> Names => _sources.Keys;
+
     public bool TryResolve(string name, [MaybeNullWhen(false)] out string source)
     {
         if (_sources.TryGetValue(name, out var entry))

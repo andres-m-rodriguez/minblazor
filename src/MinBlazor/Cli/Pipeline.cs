@@ -10,29 +10,55 @@ namespace MinBlazor.Cli;
 
 public sealed record Compiled(Compilation Compilation, BuildScript? Script, IReadOnlyList<Diagnostic> Diagnostics);
 
+internal sealed record ResolvedRegistry(ComponentRegistry Registry, BuildScript? Script);
+
 public sealed class Pipeline
 {
     private readonly IOutput _output;
 
     public Pipeline(IOutput output) => _output = output;
 
-    // Indexes the folder, runs Build.cs BeforeCompile, and compiles the entry and its
+    // Indexes the folder and runs Build.cs BeforeCompile, then compiles the entry and its
     // dependency closure. No scaffold is written and dotnet is not invoked.
     public Result<Compiled> Compile(string razorPath, string scaffoldDir)
     {
-        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var resolved = Resolve(razorPath, scaffoldDir);
+        if (!resolved.IsSuccess)
+            return Result<Compiled>.Fail(resolved.Error!);
 
-        var entrySource = File.ReadAllText(razorPath);
         var entryName = ComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var entrySource = File.ReadAllText(razorPath);
+
+        var diagnostics = new Diagnostics();
+        var compilation = new Compiler(resolved.Value!.Registry, diagnostics).Compile(entryName, entrySource);
+
+        return Result<Compiled>.Ok(new Compiled(compilation, resolved.Value!.Script, diagnostics.Items));
+    }
+
+    // Every component a file can use: the .razor in its folder plus Build.cs virtual
+    // components. Used by the language server for component completion.
+    public Result<IReadOnlyList<string>> AvailableComponents(string razorPath)
+    {
+        var resolved = Resolve(razorPath, CacheDirectory(razorPath));
+        if (!resolved.IsSuccess)
+            return Result<IReadOnlyList<string>>.Fail(resolved.Error!);
+
+        var names = resolved.Value!.Registry.Names.OrderBy(name => name, StringComparer.Ordinal).ToList();
+        return Result<IReadOnlyList<string>>.Ok(names);
+    }
+
+    private Result<ResolvedRegistry> Resolve(string razorPath, string scaffoldDir)
+    {
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
 
         var registry = new ComponentRegistry();
         var indexed = FolderIndexer.Index(sourceDir, registry);
         if (!indexed.IsSuccess)
-            return Result<Compiled>.Fail(indexed.Error!);
+            return Result<ResolvedRegistry>.Fail(indexed.Error!);
 
         var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, _output.Info);
         if (!scriptResult.IsSuccess)
-            return Result<Compiled>.Fail(scriptResult.Error!);
+            return Result<ResolvedRegistry>.Fail(scriptResult.Error!);
 
         var script = scriptResult.Value;
 
@@ -40,20 +66,17 @@ public sealed class Pipeline
         {
             var before = script.RunBeforeCompile();
             if (!before.IsSuccess)
-                return Result<Compiled>.Fail(before.Error!);
+                return Result<ResolvedRegistry>.Fail(before.Error!);
 
             foreach (var component in script.Outputs.Components)
             {
                 var added = registry.Add(component.Name, component.Source);
                 if (!added.IsSuccess)
-                    return Result<Compiled>.Fail(added.Error!);
+                    return Result<ResolvedRegistry>.Fail(added.Error!);
             }
         }
 
-        var diagnostics = new Diagnostics();
-        var compilation = new Compiler(registry, diagnostics).Compile(entryName, entrySource);
-
-        return Result<Compiled>.Ok(new Compiled(compilation, script, diagnostics.Items));
+        return Result<ResolvedRegistry>.Ok(new ResolvedRegistry(registry, script));
     }
 
     // Compiles, runs Build.cs AfterCompile, and writes the scaffold project. Returns the
