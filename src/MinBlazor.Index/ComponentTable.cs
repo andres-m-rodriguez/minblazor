@@ -1,4 +1,4 @@
-using MinBlazor.Parser;
+using MinBlazor.Core;
 
 namespace MinBlazor.Index;
 

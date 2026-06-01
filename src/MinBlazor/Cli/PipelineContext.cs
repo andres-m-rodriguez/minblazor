@@ -10,6 +10,7 @@ public sealed class PipelineContext(string razorPath)
 
     // Set by PrebuildStep
     public ComponentTable? ComponentTable { get; set; }
+    public Dictionary<string, string> SourcePaths { get; } = new(StringComparer.Ordinal);
     public BuildScript? Script { get; set; }
 
     // Set by CompileStep

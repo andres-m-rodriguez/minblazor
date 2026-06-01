@@ -1,8 +1,8 @@
 using MinBlazor.Compiler;
 using MinBlazor.Parser;
 using MinBlazor.Services;
-using CompilerClass = MinBlazor.Compiler.Compiler;
-using ServicesComponentName = MinBlazor.Services.ComponentName;
+using RazorCompiler = MinBlazor.Compiler.Compiler;
+using ParserComponentName = MinBlazor.Parser.ComponentName;
 
 namespace MinBlazor.Cli.Steps;
 
@@ -12,27 +12,20 @@ public sealed class CompileStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
-        var razorPath = context.RazorPath;
-        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var virtuals = context.Script?.Outputs.Components
+            .ToDictionary(c => c.Name, c => c.Source, StringComparer.Ordinal)
+            ?? new Dictionary<string, string>();
 
-        var registry = new ComponentRegistry();
-        var indexed = FolderIndexer.Index(sourceDir, registry);
-        if (!indexed.IsSuccess)
-            return Result.Fail(indexed.Error!);
+        var resolver = new IndexedComponentResolver(
+            context.ComponentTable!,
+            context.SourcePaths,
+            virtuals);
 
-        if (context.Script is not null)
-            foreach (var component in context.Script.Outputs.Components)
-            {
-                var added = registry.Add(component.Name, component.Source);
-                if (!added.IsSuccess)
-                    return Result.Fail(added.Error!);
-            }
-
-        var entryName = ServicesComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
-        var entrySource = File.ReadAllText(razorPath);
+        var entryName = ParserComponentName.From(Path.GetFileNameWithoutExtension(context.RazorPath));
+        var entrySource = File.ReadAllText(context.RazorPath);
 
         var diagnostics = new Diagnostics();
-        var compilation = new CompilerClass(registry, diagnostics).Compile(entryName, entrySource);
+        var compilation = new RazorCompiler(resolver, diagnostics).Compile(entryName, entrySource);
 
         foreach (var diagnostic in diagnostics.Items)
             context.Diagnostics.Add(diagnostic);
