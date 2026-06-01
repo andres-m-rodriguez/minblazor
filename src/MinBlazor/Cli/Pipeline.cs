@@ -49,11 +49,26 @@ public sealed class Pipeline
         var names = new SortedSet<string>(resolved.Value!.Registry.Names, StringComparer.Ordinal);
 
         var sourceDir = Path.GetDirectoryName(razorPath)!;
-        var binDir = Path.Combine(scaffoldDir, "bin", "Debug", "net10.0");
-        foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)))
-            names.Add(component);
+        var binDir = FindBuildOutput(sourceDir);
+        if (binDir is not null)
+            foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)))
+                names.Add(component);
 
         return Result<IReadOnlyList<string>>.Ok(names.ToList());
+    }
+
+    // The package assemblies live in a built scaffold's bin. The file being edited may not be
+    // the entry that was built, so accept any built scaffold belonging to this folder.
+    private static string? FindBuildOutput(string sourceDir)
+    {
+        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
+        {
+            var binDir = Path.Combine(CacheDirectory(file), "bin", "Debug", "net10.0");
+            if (Directory.Exists(binDir))
+                return binDir;
+        }
+
+        return null;
     }
 
     // Union of #:package directives across every .razor in the folder.
@@ -147,6 +162,9 @@ public sealed class Pipeline
     public static string CacheDirectory(string razorPath)
     {
         var path = Path.GetFullPath(razorPath);
+        if (OperatingSystem.IsWindows())
+            path = path.ToLowerInvariant();
+
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(path)))[..16].ToLowerInvariant();
         return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
