@@ -21,4 +21,7 @@ public sealed class PipelineContext(string razorPath, bool clean = false)
 
     // Set by ScaffoldStep
     public string? ScaffoldDir { get; set; }
+
+    // Set by BuildStep
+    public string? ManifestPath { get; set; }
 }
