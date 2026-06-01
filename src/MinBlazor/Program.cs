@@ -26,6 +26,9 @@ switch (parsed.Value)
     case CliCommand.Build build:
         return new BuildCommand(output).Execute(build.Options);
 
+    case CliCommand.Build2 build2:
+        return new Build2Command(output).Execute(build2.Options);
+
     default:
         return 1;
 }

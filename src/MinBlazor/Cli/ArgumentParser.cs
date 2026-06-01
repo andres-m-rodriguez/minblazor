@@ -15,6 +15,7 @@ public static class ArgumentParser
             "--version" or "-v" => Ok(new CliCommand.ShowVersion()),
             "run" => ParseRun(args),
             "build" => ParseBuild(args),
+            "build2" => ParseBuild2(args),
             var other => Fail($"Unknown command '{other}'. Try 'minblazor --help'."),
         };
     }
@@ -109,6 +110,22 @@ public static class ArgumentParser
             Clean = clean,
         };
         return Ok(new CliCommand.Run(options));
+    }
+
+    private static Result<CliCommand> ParseBuild2(string[] args)
+    {
+        string? file = args.Skip(1).FirstOrDefault(a => !a.StartsWith('-'));
+
+        if (file is null)
+            return Fail("No .razor file given. Usage: minblazor build2 Index.razor");
+
+        var razorPath = Path.GetFullPath(file);
+        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        if (!File.Exists(razorPath))
+            return Fail($"File not found: {razorPath}");
+
+        return Ok(new CliCommand.Build2(new Build2Options { RazorFile = razorPath }));
     }
 
     private static Result<CliCommand> Ok(CliCommand command) => Result<CliCommand>.Ok(command);

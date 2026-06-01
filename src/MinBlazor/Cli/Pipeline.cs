@@ -202,7 +202,9 @@ public sealed class Pipeline(IOutput output)
 
         if (result.Script is not null)
             foreach (var component in result.Script.Outputs.Components)
-                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+                table.Add(
+                    new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null)
+                );
 
         if (Directory.Exists(binDir))
         {
