@@ -1,3 +1,4 @@
+using MinBlazor.Compiler;
 using MinBlazor.Razor;
 
 namespace MinBlazor.Razor.Tests;
@@ -10,7 +11,7 @@ public class ComponentRegistryTests
         var registry = new ComponentRegistry();
         registry.Add("Card", "<div>@ChildContent</div>");
 
-        await Assert.That(registry.TryResolve("Card", out var source)).IsTrue();
+        await Assert.That(registry.TryResolve("Card", out var source)).IsEqualTo(ResolveResult.Resolved);
         await Assert.That(source).IsEqualTo("<div>@ChildContent</div>");
     }
 
@@ -19,7 +20,7 @@ public class ComponentRegistryTests
     {
         var registry = new ComponentRegistry();
 
-        await Assert.That(registry.TryResolve("Missing", out _)).IsFalse();
+        await Assert.That(registry.TryResolve("Missing", out _)).IsEqualTo(ResolveResult.NotFound);
         await Assert.That(registry.Contains("Missing")).IsFalse();
     }
 
