@@ -220,7 +220,7 @@ public sealed class Pipeline(IOutput output)
             ? PackageComponents.Scan(binDir, PackageNames(result)).Namespaces
             : (IReadOnlyList<string>)[];
 
-        new Scaffold().Write(
+        new MinBlazor.Services.Scaffold().Write(
             scaffoldDir,
             sourceDir,
             result.Compilation,
@@ -280,6 +280,7 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
+
 
 
 

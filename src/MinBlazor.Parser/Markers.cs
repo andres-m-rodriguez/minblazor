@@ -1,6 +1,6 @@
 namespace MinBlazor.Parser;
 
-internal static class Markers
+public static class Markers
 {
     public const string HostTag = "hostTag";
 
@@ -26,3 +26,4 @@ internal static class Markers
         return -1;
     }
 }
+

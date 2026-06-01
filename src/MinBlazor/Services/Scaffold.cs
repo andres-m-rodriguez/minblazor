@@ -2,6 +2,7 @@ using MinBlazor.Build;
 using MinBlazor.Build.Models;
 using MinBlazor.Compiler;
 using MinBlazor.Parser;
+using MinBlazor.Scaffold;
 
 namespace MinBlazor.Services;
 
@@ -98,4 +99,5 @@ public sealed class Scaffold
                 File.Delete(file);
     }
 }
+
 

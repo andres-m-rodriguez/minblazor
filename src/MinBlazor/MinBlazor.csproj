@@ -17,14 +17,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-        <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
+    <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
     <ProjectReference Include="..\MinBlazor.Parser\MinBlazor.Parser.csproj" />
-        <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
     <ProjectReference Include="..\MinBlazor.Compiler\MinBlazor.Compiler.csproj" />
-        <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
     <ProjectReference Include="..\MinBlazor.Build\MinBlazor.Build.csproj" />
-        <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
     <ProjectReference Include="..\MinBlazor.Index\MinBlazor.Index.csproj" />
+    <ProjectReference Include="..\MinBlazor.Scaffold\MinBlazor.Scaffold.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,4 +30,3 @@
   </ItemGroup>
 
 </Project>
-

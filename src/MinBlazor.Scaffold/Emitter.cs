@@ -1,6 +1,8 @@
 using System.Text;
 
-namespace MinBlazor.Parser;
+using MinBlazor.Parser;
+
+namespace MinBlazor.Scaffold;
 
 public sealed class Emitter
 {
@@ -33,3 +35,5 @@ public sealed class Emitter
         return string.Concat(tag[..(marker - 1)], tag[(marker + 1 + Markers.HostTag.Length)..]);
     }
 }
+
+

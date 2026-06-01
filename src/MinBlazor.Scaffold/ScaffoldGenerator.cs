@@ -11,7 +11,8 @@ public sealed class ScaffoldGenerator
     public ScaffoldContent Generate(
         Compilation compilation,
         BuildOutputs? build,
-        ScaffoldOptions options)
+        ScaffoldOptions options
+    )
     {
         var entries = new List<ScaffoldEntry>();
         var headTags = new List<string>();
@@ -28,7 +29,12 @@ public sealed class ScaffoldGenerator
                 entries.Add(new SourceFile(source.FileName, source.Code.AsMemory()));
 
             if (build.Options.Count > 0)
-                entries.Add(new SourceFile("BuildOptions.cs", Templates.BuildOptions(build.Options).AsMemory()));
+                entries.Add(
+                    new SourceFile(
+                        "BuildOptions.cs",
+                        Templates.BuildOptions(build.Options).AsMemory()
+                    )
+                );
 
             foreach (var asset in build.Assets)
                 entries.Add(new StaticAsset(asset.Path, asset.Contents));
@@ -37,17 +43,36 @@ public sealed class ScaffoldGenerator
         var properties = build?.Properties ?? new Dictionary<string, string>();
         var head = string.Join('\n', headTags.OrderBy(t => t, StringComparer.Ordinal));
 
-        entries.Add(new ProjectFile(Templates.Csproj(options.BlazorPackageVersion, compilation.Packages, properties).AsMemory()));
-        entries.Add(new SourceFile("Program.cs", Templates.Program(compilation.Entry.Name, options.HasDependencies).AsMemory()));
-        entries.Add(new SourceFile("_Imports.razor", Templates.Imports(options.PackageUsings).AsMemory()));
+        entries.Add(
+            new ProjectFile(
+                Templates
+                    .Csproj(options.BlazorPackageVersion, compilation.Packages, properties)
+                    .AsMemory()
+            )
+        );
+        entries.Add(
+            new SourceFile(
+                "Program.cs",
+                Templates.Program(compilation.Entry.Name, options.HasDependencies).AsMemory()
+            )
+        );
+        entries.Add(
+            new SourceFile("_Imports.razor", Templates.Imports(options.PackageUsings).AsMemory())
+        );
         entries.Add(new HostPage(Templates.IndexHtml(head).AsMemory()));
 
         return new ScaffoldContent(entries);
     }
 
-    private void EmitComponent(List<ScaffoldEntry> entries, List<string> headTags, CompiledComponent component)
+    private void EmitComponent(
+        List<ScaffoldEntry> entries,
+        List<string> headTags,
+        CompiledComponent component
+    )
     {
-        entries.Add(new ComponentFile(component.Name, _emitter.Emit(component.Document).AsMemory()));
+        entries.Add(
+            new ComponentFile(component.Name, _emitter.Emit(component.Document).AsMemory())
+        );
         headTags.AddRange(_emitter.EmitHostTags(component.HostTags));
     }
 }
