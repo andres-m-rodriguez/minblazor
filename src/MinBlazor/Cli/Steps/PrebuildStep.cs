@@ -13,7 +13,7 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
     {
         var razorPath = context.RazorPath;
         var sourceDir = Path.GetDirectoryName(razorPath)!;
-        var scaffoldDir = ScaffoldCache.DirectoryFor(razorPath);
+        var scaffoldDir = PipelineCache.DirectoryFor(razorPath);
 
         var table = new ComponentTable();
 
@@ -76,7 +76,7 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
             var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
         )
         {
-            var binDir = Path.Combine(ScaffoldCache.DirectoryFor(file), "bin", "Debug", "net10.0");
+            var binDir = Path.Combine(PipelineCache.DirectoryFor(file), "bin", "Debug", "net10.0");
             if (Directory.Exists(binDir))
                 return binDir;
         }
@@ -84,4 +84,5 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         return null;
     }
 }
+
 
