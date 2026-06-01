@@ -80,11 +80,11 @@ public sealed class Pipeline(IOutput output)
         if (binDir is not null)
         {
             var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
-            var packageNames = new Scanner().Packages(entryDoc)
-                .Select(p => p.Name)
-                .Concat(script?.Outputs.Packages.Select(p => p.Name) ?? [])
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
+            var packages = new Scanner().Packages(entryDoc)
+                .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
+            foreach (var p in script?.Outputs.Packages ?? [])
+                packages[p.Name] = p;
+            var packageNames = packages.Keys.ToList();
 
             var scanner = new AssemblyScanner();
             scanner.Load(new BinDirectoryAssemblyProvider(binDir));
@@ -136,7 +136,6 @@ public sealed class Pipeline(IOutput output)
 
         return null;
     }
-
 
     private Result<ResolvedRegistry> Resolve(string razorPath, string scaffoldDir)
     {
@@ -283,4 +282,3 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
-
