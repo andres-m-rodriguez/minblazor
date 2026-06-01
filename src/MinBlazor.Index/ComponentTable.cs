@@ -6,6 +6,7 @@ public sealed class ComponentTable
 {
     private readonly Dictionary<string, IndexedComponent> _byName = new(StringComparer.Ordinal);
     private readonly List<string> _sortedNames = [];
+    private readonly SortedSet<string> _namespaces = new(StringComparer.Ordinal);
 
     public int Count => _byName.Count;
 
@@ -16,6 +17,9 @@ public sealed class ComponentTable
 
         var index = _sortedNames.BinarySearch(component.Name, StringComparer.Ordinal);
         _sortedNames.Insert(index < 0 ? ~index : index, component.Name);
+
+        if (component.Namespace is not null)
+            _namespaces.Add(component.Namespace);
 
         return Result.Ok();
     }
@@ -51,11 +55,5 @@ public sealed class ComponentTable
         return results;
     }
 
-    public IReadOnlyList<string> Namespaces =>
-        _byName.Values
-            .Select(c => c.Namespace)
-            .Where(ns => ns is not null)
-            .Distinct(StringComparer.Ordinal)
-            .Order()
-            .ToList()!;
+    public IReadOnlyList<string> Namespaces => [.. _namespaces];
 }
