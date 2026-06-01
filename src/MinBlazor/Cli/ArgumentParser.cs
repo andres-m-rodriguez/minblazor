@@ -133,4 +133,3 @@ public static class ArgumentParser
 
     private static Result<CliCommand> Fail(string message) => Result<CliCommand>.Fail(message);
 }
-
