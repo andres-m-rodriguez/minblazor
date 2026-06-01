@@ -67,7 +67,7 @@ public sealed class Pipeline(IOutput output)
                 return Result<ComponentTable>.Fail(before.Error!);
 
             foreach (var dir in script.Outputs.SourceDirectories)
-            foreach (var (name, _) in new FolderSourceProvider(dir).GetComponents())
+            foreach (var (name, _) in new FolderSourceProvider(dir, SearchOption.AllDirectories).GetComponents())
                 table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
 
             foreach (var component in script.Outputs.Components)

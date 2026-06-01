@@ -10,20 +10,13 @@ using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Services;
 
-public sealed class BuildScriptLoader
+public sealed class BuildScriptLoader(string sourceDir, string outputDir, Action<string> log)
 {
     private const string TypeName = "Build";
 
-    private readonly string _sourceDir;
-    private readonly string _outputDir;
-    private readonly Action<string> _log;
-
-    public BuildScriptLoader(string sourceDir, string outputDir, Action<string> log)
-    {
-        _sourceDir = sourceDir;
-        _outputDir = outputDir;
-        _log = log;
-    }
+    private readonly string _sourceDir = sourceDir;
+    private readonly string _outputDir = outputDir;
+    private readonly Action<string> _log = log;
 
     public Result<BuildScript?> Load()
     {
@@ -38,7 +31,9 @@ public sealed class BuildScriptLoader
             References(),
             new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
-                nullableContextOptions: NullableContextOptions.Enable));
+                nullableContextOptions: NullableContextOptions.Enable
+            )
+        );
 
         using var stream = new MemoryStream();
         var emit = compilation.Emit(stream);
@@ -49,15 +44,22 @@ public sealed class BuildScriptLoader
         var buildType = assembly.GetTypes().FirstOrDefault(t => t.Name == TypeName);
         if (buildType is null)
             return Result<BuildScript?>.Fail(
-                $"{BuildScript.FileName} must define a static class named '{TypeName}'.");
+                $"{BuildScript.FileName} must define a static class named '{TypeName}'."
+            );
 
-        var before = buildType.GetMethod("BeforeCompile", BindingFlags.Public | BindingFlags.Static);
+        var before = buildType.GetMethod(
+            "BeforeCompile",
+            BindingFlags.Public | BindingFlags.Static
+        );
         var after = buildType.GetMethod("AfterCompile", BindingFlags.Public | BindingFlags.Static);
         if (before is null && after is null)
             return Result<BuildScript?>.Fail(
-                $"{BuildScript.FileName}: '{TypeName}' has no BeforeCompile or AfterCompile method.");
+                $"{BuildScript.FileName}: '{TypeName}' has no BeforeCompile or AfterCompile method."
+            );
 
-        return Result<BuildScript?>.Ok(new BuildScript(before, after, _sourceDir, _outputDir, _log));
+        return Result<BuildScript?>.Ok(
+            new BuildScript(before, after, _sourceDir, _outputDir, _log)
+        );
     }
 
     private static IReadOnlyList<MetadataReference> References()
@@ -82,8 +84,11 @@ public sealed class BuildScriptLoader
     private static string FormatErrors(string path, EmitResult emit)
     {
         var builder = new StringBuilder($"Failed to compile {Path.GetFileName(path)}:");
-        foreach (var diagnostic in emit.Diagnostics.Where(d =>
-            d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error))
+        foreach (
+            var diagnostic in emit.Diagnostics.Where(d =>
+                d.Severity == Microsoft.CodeAnalysis.DiagnosticSeverity.Error
+            )
+        )
             builder.Append("\n  ").Append(diagnostic);
 
         return builder.ToString();

@@ -25,7 +25,8 @@ public sealed class AssemblyScanner
 
         _compilation ??= CSharpCompilation.Create(
             "minblazor-index",
-            references: _assemblies.Select(a => a.Reference));
+            references: _assemblies.Select(a => a.Reference)
+        );
 
         _iComponent ??= _compilation.GetTypeByMetadataName(IComponentName);
 
@@ -45,17 +46,22 @@ public sealed class AssemblyScanner
 
             foreach (var type in Types(assembly.GlobalNamespace))
             {
-                if (type.DeclaredAccessibility != Accessibility.Public
+                if (
+                    type.DeclaredAccessibility != Accessibility.Public
                     || type.TypeKind != TypeKind.Class
                     || type.IsAbstract
-                    || !type.AllInterfaces.Contains(_iComponent, SymbolEqualityComparer.Default))
+                    || !type.AllInterfaces.Contains(_iComponent, SymbolEqualityComparer.Default)
+                )
                     continue;
 
                 var ns = type.ContainingNamespace.ToDisplayString();
-                results.Add(new IndexedComponent(
-                    type.Name,
-                    ComponentKind.Package,
-                    string.IsNullOrEmpty(ns) ? null : ns));
+                results.Add(
+                    new IndexedComponent(
+                        type.Name,
+                        ComponentKind.Package,
+                        string.IsNullOrEmpty(ns) ? null : ns
+                    )
+                );
             }
         }
 
@@ -69,7 +75,7 @@ public sealed class AssemblyScanner
             yield return type;
 
         foreach (var child in ns.GetNamespaceMembers())
-            foreach (var type in Types(child))
-                yield return type;
+        foreach (var type in Types(child))
+            yield return type;
     }
 }
