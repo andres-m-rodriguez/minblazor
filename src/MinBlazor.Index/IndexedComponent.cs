@@ -10,6 +10,4 @@ public enum ComponentKind
 public sealed record IndexedComponent(
     string Name,
     ComponentKind Kind,
-    string? Namespace,
-    string? SourcePath
-);
+    string? Namespace);

@@ -17,20 +17,7 @@ public sealed class ComponentIndex
             .Order()
             .ToList()!;
 
-    public void AddSource(ISourceComponentProvider provider)
-    {
-        foreach (var (name, path) in provider.GetComponents())
-            _components.Add(
-                new IndexedComponent(name, ComponentKind.Source, Namespace: null, path)
-            );
-    }
-
-    public void AddVirtual(string name, string razorSource)
-    {
-        _components.Add(
-            new IndexedComponent(name, ComponentKind.Virtual, Namespace: null, SourcePath: null)
-        );
-    }
+    public void Add(IndexedComponent component) => _components.Add(component);
 
     public void AddPackage(AssemblyScanner scanner, IReadOnlyCollection<string> assemblyNames)
     {
