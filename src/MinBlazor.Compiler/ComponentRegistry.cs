@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using System.Diagnostics.CodeAnalysis;
 using MinBlazor.Parser;
 
@@ -22,15 +23,16 @@ public sealed class ComponentRegistry : IComponentResolver
 
     public IReadOnlyCollection<string> Names => _sources.Keys;
 
-    public bool TryResolve(string name, [MaybeNullWhen(false)] out string source)
+    public ResolveResult TryResolve(string name, [NotNullWhen(true)] out string? source)
     {
         if (_sources.TryGetValue(name, out var entry))
         {
             source = entry.Read();
-            return true;
+            return ResolveResult.Resolved;
         }
 
         source = null;
-        return false;
+        return ResolveResult.NotFound;
     }
 }
+

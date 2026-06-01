@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using System.Collections;
 using System.Reflection;
 using MinBlazor.Build;
@@ -98,3 +99,4 @@ public sealed class BuildScript
         return environment;
     }
 }
+

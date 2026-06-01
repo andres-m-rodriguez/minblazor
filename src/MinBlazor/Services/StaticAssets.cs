@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using MinBlazor.Models;
@@ -58,3 +59,4 @@ public sealed class StaticAssets
         return File.Exists(physicalPath);
     }
 }
+

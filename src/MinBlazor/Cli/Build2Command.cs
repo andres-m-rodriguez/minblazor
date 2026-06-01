@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Index;
 using MinBlazor.Models;
 
@@ -34,3 +35,4 @@ public sealed class Build2Command(IOutput output)
         return 0;
     }
 }
+

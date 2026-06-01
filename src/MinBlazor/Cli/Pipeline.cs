@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using System.Security.Cryptography;
 using System.Text;
 using MinBlazor.Build.Models;
@@ -279,6 +280,7 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
+
 
 
 

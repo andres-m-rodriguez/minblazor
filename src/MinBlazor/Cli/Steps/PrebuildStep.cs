@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Index;
 using MinBlazor.Parser;
 using MinBlazor.Services;
@@ -83,3 +84,4 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         return null;
     }
 }
+

@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+        <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
     <ProjectReference Include="..\..\src\MinBlazor\MinBlazor.csproj" />
   </ItemGroup>
 
@@ -18,3 +19,4 @@
   </ItemGroup>
 
 </Project>
+

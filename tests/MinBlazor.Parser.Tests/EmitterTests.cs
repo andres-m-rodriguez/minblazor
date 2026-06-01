@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Compiler;
 using MinBlazor.Parser;
 
@@ -19,5 +20,6 @@ public class EmitterTests
         await Assert.That(hostTags[0]).IsEqualTo("<script src=\"x.js\"></script>");
     }
 }
+
 
 

@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 namespace MinBlazor.Core;
 
 public readonly record struct Result
@@ -15,3 +16,4 @@ public readonly record struct Result
 
     public static Result Fail(string error) => new(false, error);
 }
+

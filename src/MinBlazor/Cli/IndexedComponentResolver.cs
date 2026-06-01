@@ -9,27 +9,29 @@ public sealed class IndexedComponentResolver(
     IReadOnlyDictionary<string, string> sourcePaths,
     IReadOnlyDictionary<string, string> virtuals) : IComponentResolver
 {
-    public bool TryResolve(string name, [MaybeNullWhen(false)] out string source)
+    public ResolveResult TryResolve(string name, [NotNullWhen(true)] out string? source)
     {
         source = null;
 
         var component = table.TryGet(name);
         if (component is null)
-            return false;
+            return ResolveResult.NotFound;
 
         switch (component.Kind)
         {
             case ComponentKind.Source:
                 if (!sourcePaths.TryGetValue(name, out var path))
-                    return false;
+                    return ResolveResult.NotFound;
                 source = File.ReadAllText(path);
-                return true;
+                return ResolveResult.Resolved;
 
             case ComponentKind.Virtual:
-                return virtuals.TryGetValue(name, out source);
+                if (!virtuals.TryGetValue(name, out source))
+                    return ResolveResult.NotFound;
+                return ResolveResult.Resolved;
 
             default:
-                return false;
+                return ResolveResult.External;
         }
     }
 }

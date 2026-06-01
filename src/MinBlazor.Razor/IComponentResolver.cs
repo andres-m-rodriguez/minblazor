@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using MinBlazor.Compiler;
 
 namespace MinBlazor.Razor;
 
 public interface IComponentResolver
 {
-    bool TryResolve(string componentName, [MaybeNullWhen(false)] out string source);
+    ResolveResult TryResolve(string componentName, [NotNullWhen(true)] out string? source);
 }

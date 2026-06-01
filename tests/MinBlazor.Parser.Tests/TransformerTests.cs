@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Compiler;
 using MinBlazor.Parser;
 
@@ -36,5 +37,6 @@ public class TransformerTests
         await Assert.That(new Emitter().Emit(result.Document)).IsEqualTo("<h1>Hi</h1>");
     }
 }
+
 
 

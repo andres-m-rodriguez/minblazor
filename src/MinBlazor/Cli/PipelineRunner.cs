@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Cli.Steps;
 using MinBlazor.Parser;
 
@@ -23,3 +24,4 @@ public sealed class PipelineRunner(IOutput output)
         return Result.Ok();
     }
 }
+

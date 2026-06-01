@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Models;
 
 namespace MinBlazor.Cli;
@@ -132,3 +133,4 @@ public static class ArgumentParser
 
     private static Result<CliCommand> Fail(string message) => Result<CliCommand>.Fail(message);
 }
+

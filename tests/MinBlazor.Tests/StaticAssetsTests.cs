@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using MinBlazor.Services;
 
 namespace MinBlazor.Tests;
@@ -69,3 +70,4 @@ public class StaticAssetsTests
         """;
     }
 }
+

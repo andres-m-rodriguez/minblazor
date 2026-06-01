@@ -4,5 +4,5 @@ namespace MinBlazor.Compiler;
 
 public interface IComponentResolver
 {
-    bool TryResolve(string componentName, [MaybeNullWhen(false)] out string source);
+    ResolveResult TryResolve(string componentName, [NotNullWhen(true)] out string? source);
 }

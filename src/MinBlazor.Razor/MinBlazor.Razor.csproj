@@ -6,5 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-</Project>
+  <ItemGroup>
+    <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
+    <ProjectReference Include="..\MinBlazor.Compiler\MinBlazor.Compiler.csproj" />
+  </ItemGroup>
 
+</Project>

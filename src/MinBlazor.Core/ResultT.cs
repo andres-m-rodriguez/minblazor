@@ -1,3 +1,4 @@
+using MinBlazor.Core;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MinBlazor.Core;
@@ -25,3 +26,4 @@ public readonly record struct Result<T>
 
     public static implicit operator Result<T>(T value) => Ok(value);
 }
+
