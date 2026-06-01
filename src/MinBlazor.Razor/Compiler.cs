@@ -10,11 +10,11 @@ public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagn
     private readonly Analyzer _analyzer = new();
     private readonly Transformer _transformer = new();
 
-    public Compilation Compile(string entryName, string entrySource)
+    public MinBlazor.Razor.Models.Compilation Compile(string entryName, string entrySource)
     {
         var entry = CompileUnit(entryName, entrySource);
 
-        var components = new List<CompiledComponent>();
+        var components = new List<MinBlazor.Razor.Models.CompiledComponent>();
         var packages = new Dictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         var visited = new HashSet<string> { entryName };
         var queue = new Queue<string>();
@@ -50,20 +50,20 @@ public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagn
                     queue.Enqueue(reference);
         }
 
-        return new Compilation(
+        return new MinBlazor.Razor.Models.Compilation(
             entry,
             components,
             packages.Values.OrderBy(p => p.Name, StringComparer.Ordinal).ToList()
         );
     }
 
-    private CompiledComponent CompileUnit(string name, string source)
+    private MinBlazor.Razor.Models.CompiledComponent CompileUnit(string name, string source)
     {
         var document = new RazorParser(source).Parse();
         var transformed = _transformer.Transform(document);
         var references = _analyzer.Analyze(transformed.Document).Components;
 
-        return new CompiledComponent(
+        return new MinBlazor.Razor.Models.CompiledComponent(
             name,
             transformed.Document,
             transformed.HostTags,
@@ -72,6 +72,7 @@ public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagn
         );
     }
 }
+
 
 
 
