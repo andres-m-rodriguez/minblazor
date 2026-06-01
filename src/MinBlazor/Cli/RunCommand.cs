@@ -11,7 +11,9 @@ public sealed class RunCommand
 
     public int Execute(RunOptions options)
     {
-        _output.Info($"running {Path.GetFileName(options.RazorFile)} on http://localhost:{options.Port}");
+        _output.Info(
+            $"running {Path.GetFileName(options.RazorFile)} on http://localhost:{options.Port}"
+        );
 
         var prepared = new Pipeline(_output).Prepare(options.RazorFile, options.Clean);
         if (!prepared.IsSuccess)

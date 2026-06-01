@@ -51,7 +51,9 @@ public abstract class BuildContext
 
         _outputs.SourceDirectories.Add(directory);
 
-        foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+        foreach (
+            var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories)
+        )
             _outputs.Sources.Add(new BuildSource(Path.GetFileName(file), File.ReadAllText(file)));
     }
 

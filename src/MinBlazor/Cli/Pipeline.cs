@@ -67,11 +67,13 @@ public sealed class Pipeline(IOutput output)
                 return Result<ComponentTable>.Fail(before.Error!);
 
             foreach (var dir in script.Outputs.SourceDirectories)
-                foreach (var (name, _) in new FolderSourceProvider(dir).GetComponents())
-                    table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
+            foreach (var (name, _) in new FolderSourceProvider(dir).GetComponents())
+                table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
 
             foreach (var component in script.Outputs.Components)
-                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+                table.Add(
+                    new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null)
+                );
         }
 
         var binDir = FindBuildOutput(sourceDir);
@@ -136,13 +138,12 @@ public sealed class Pipeline(IOutput output)
     private static IReadOnlyCollection<string> FolderPackages(string sourceDir)
     {
         var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var scanner = new Scanner();
 
-        foreach (
-            var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories)
-        )
+        foreach (var file in Directory.EnumerateFiles(sourceDir, "*.razor", SearchOption.AllDirectories))
         {
             var document = new Parser(new Lexer(File.ReadAllText(file))).Parse();
-            foreach (var package in new Transformer().Transform(document).Packages)
+            foreach (var package in scanner.Packages(document))
                 packages.Add(package.Name);
         }
 
