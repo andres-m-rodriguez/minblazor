@@ -51,7 +51,7 @@ public sealed class Pipeline
         var sourceDir = Path.GetDirectoryName(razorPath)!;
         var binDir = FindBuildOutput(sourceDir);
         if (binDir is not null)
-            foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)))
+            foreach (var component in PackageComponents.Scan(binDir, FolderPackages(sourceDir)).Components)
                 names.Add(component);
 
         return Result<IReadOnlyList<string>>.Ok(names.ToList());
@@ -154,7 +154,13 @@ public sealed class Pipeline
         }
 
         var sourceDir = Path.GetDirectoryName(razorPath)!;
-        new Scaffold().Write(scaffoldDir, sourceDir, result.Compilation, AppInfo.DefaultPort, result.Script?.Outputs);
+        var binDir = Path.Combine(scaffoldDir, "bin", "Debug", "net10.0");
+        var packageNames = result.Compilation.Packages.Select(package => package.Name).ToList();
+        var usings = Directory.Exists(binDir)
+            ? PackageComponents.Scan(binDir, packageNames).Namespaces
+            : (IReadOnlyList<string>)[];
+
+        new Scaffold().Write(scaffoldDir, sourceDir, result.Compilation, AppInfo.DefaultPort, result.Script?.Outputs, usings);
 
         return Result<string>.Ok(scaffoldDir);
     }

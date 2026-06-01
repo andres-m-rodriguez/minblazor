@@ -11,7 +11,7 @@ public sealed class Scaffold
 
     private static readonly IReadOnlyDictionary<string, string> EmptyProperties = new Dictionary<string, string>();
 
-    public void Write(string targetDir, string sourceDir, Compilation compilation, int port, BuildOutputs? build)
+    public void Write(string targetDir, string sourceDir, Compilation compilation, int port, BuildOutputs? build, IReadOnlyCollection<string> usings)
     {
         Directory.CreateDirectory(targetDir);
         Directory.CreateDirectory(Path.Combine(targetDir, "Properties"));
@@ -40,7 +40,7 @@ public sealed class Scaffold
         Produce(produced, Path.Combine(targetDir, ".gitignore"), "*\n");
         Produce(produced, Path.Combine(targetDir, "App.csproj"), ScaffoldTemplates.Csproj(AppInfo.BlazorPackageVersion, packages, properties));
         Produce(produced, Path.Combine(targetDir, "Program.cs"), ScaffoldTemplates.Program(compilation.Entry.Name, hasDependencies));
-        Produce(produced, Path.Combine(targetDir, "_Imports.razor"), ScaffoldTemplates.Imports([]));
+        Produce(produced, Path.Combine(targetDir, "_Imports.razor"), ScaffoldTemplates.Imports(usings));
         Produce(produced, Path.Combine(targetDir, "Properties", "launchSettings.json"), ScaffoldTemplates.LaunchSettings(port));
 
         var head = string.Join('\n', hostTags.OrderBy(tag => tag, StringComparer.Ordinal));

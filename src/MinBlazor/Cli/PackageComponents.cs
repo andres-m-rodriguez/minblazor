@@ -4,32 +4,37 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace MinBlazor.Cli;
 
+public sealed record PackageScan(IReadOnlyList<string> Components, IReadOnlyList<string> Namespaces);
+
 // Finds Blazor components (public, non-abstract IComponent types) inside the assemblies of
-// the given packages. The scaffold's build output holds every referenced assembly as a real
-// PE file, so Roslyn can resolve IComponent and the component base chain from that one folder.
+// the given packages, along with their namespaces. The scaffold's build output holds every
+// referenced assembly as a real PE file, so Roslyn can resolve IComponent and the component
+// base chain from that one folder.
 public static class PackageComponents
 {
     private const string IComponentName = "Microsoft.AspNetCore.Components.IComponent";
 
-    private static readonly ConcurrentDictionary<string, (DateTime Stamp, IReadOnlyList<string> Components)> Cache = new();
+    private static readonly PackageScan Empty = new([], []);
 
-    public static IReadOnlyList<string> Scan(string binDir, IReadOnlyCollection<string> packageNames)
+    private static readonly ConcurrentDictionary<string, (DateTime Stamp, PackageScan Scan)> Cache = new();
+
+    public static PackageScan Scan(string binDir, IReadOnlyCollection<string> packageNames)
     {
         if (packageNames.Count == 0 || !Directory.Exists(binDir))
-            return [];
+            return Empty;
 
         var stamp = Directory.GetLastWriteTimeUtc(binDir);
         var key = binDir + "|" + string.Join(",", packageNames.OrderBy(name => name, StringComparer.Ordinal));
 
         if (Cache.TryGetValue(key, out var cached) && cached.Stamp == stamp)
-            return cached.Components;
+            return cached.Scan;
 
-        var components = ScanCore(binDir, packageNames);
-        Cache[key] = (stamp, components);
-        return components;
+        var scan = ScanCore(binDir, packageNames);
+        Cache[key] = (stamp, scan);
+        return scan;
     }
 
-    private static IReadOnlyList<string> ScanCore(string binDir, IReadOnlyCollection<string> packageNames)
+    private static PackageScan ScanCore(string binDir, IReadOnlyCollection<string> packageNames)
     {
         var references = Directory
             .EnumerateFiles(binDir, "*.dll")
@@ -40,10 +45,11 @@ public static class PackageComponents
 
         var component = compilation.GetTypeByMetadataName(IComponentName);
         if (component is null)
-            return [];
+            return Empty;
 
         var wanted = new HashSet<string>(packageNames, StringComparer.OrdinalIgnoreCase);
         var names = new SortedSet<string>(StringComparer.Ordinal);
+        var namespaces = new SortedSet<string>(StringComparer.Ordinal);
 
         foreach (var reference in references)
         {
@@ -57,14 +63,22 @@ public static class PackageComponents
                 continue;
 
             foreach (var type in Types(assembly.GlobalNamespace))
-                if (type.DeclaredAccessibility == Accessibility.Public
-                    && type.TypeKind == TypeKind.Class
-                    && !type.IsAbstract
-                    && type.AllInterfaces.Contains(component, SymbolEqualityComparer.Default))
-                    names.Add(type.Name);
+            {
+                if (type.DeclaredAccessibility != Accessibility.Public
+                    || type.TypeKind != TypeKind.Class
+                    || type.IsAbstract
+                    || !type.AllInterfaces.Contains(component, SymbolEqualityComparer.Default))
+                    continue;
+
+                names.Add(type.Name);
+
+                var ns = type.ContainingNamespace.ToDisplayString();
+                if (!string.IsNullOrEmpty(ns))
+                    namespaces.Add(ns);
+            }
         }
 
-        return names.ToList();
+        return new PackageScan(names.ToList(), namespaces.ToList());
     }
 
     private static IEnumerable<INamedTypeSymbol> Types(INamespaceSymbol ns)
