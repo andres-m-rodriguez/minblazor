@@ -2,7 +2,7 @@ using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
-internal static class ComponentName
+internal static class ComponentNameParser
 {
     internal static string Of(RazorNode node)
     {
@@ -19,3 +19,4 @@ internal static class ComponentName
         return span[start..i].ToString();
     }
 }
+

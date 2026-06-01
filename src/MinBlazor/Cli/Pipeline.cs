@@ -6,9 +6,9 @@ using MinBlazor.Index;
 using MinBlazor.Models;
 using MinBlazor.Parser;
 using MinBlazor.Services;
-using CompilerClass = MinBlazor.Compiler.Compiler;
+using CompilerClass = MinBlazor.Compiler.RazorCompiler;
 
-using ServicesComponentName = MinBlazor.Services.ComponentName;
+
 
 namespace MinBlazor.Cli;
 
@@ -30,7 +30,7 @@ public sealed class Pipeline(IOutput output)
         if (!resolved.IsSuccess)
             return Result<Compiled>.Fail(resolved.Error!);
 
-        var entryName = ServicesComponentName.From(Path.GetFileNameWithoutExtension(razorPath));
+        var entryName = ComponentNameParser.From(Path.GetFileNameWithoutExtension(razorPath));
         var entrySource = File.ReadAllText(razorPath);
 
         var diagnostics = new Diagnostics();
@@ -279,4 +279,7 @@ public sealed class Pipeline(IOutput output)
         return new CompilationInfo(compilation.Entry.Name, components, compilation.Packages);
     }
 }
+
+
+
 

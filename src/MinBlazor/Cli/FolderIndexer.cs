@@ -1,3 +1,4 @@
+using MinBlazor.Parser;
 using MinBlazor.Compiler;
 using MinBlazor.Services;
 using Result = MinBlazor.Parser.Result;
@@ -16,7 +17,7 @@ public static class FolderIndexer
                 continue;
 
             var added = registry.Add(
-                ComponentName.From(Path.GetFileNameWithoutExtension(path)),
+                ComponentNameParser.From(Path.GetFileNameWithoutExtension(path)),
                 new FileComponentSource(path)
             );
             if (!added.IsSuccess)
@@ -30,3 +31,5 @@ public static class FolderIndexer
         path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
             .Contains(".minblazor");
 }
+
+

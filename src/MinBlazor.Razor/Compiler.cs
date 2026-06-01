@@ -2,7 +2,7 @@ using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
-public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostics)
+public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagnostics)
 {
     private readonly IComponentResolver _resolver = resolver;
     private readonly Diagnostics _diagnostics = diagnostics;
@@ -68,5 +68,7 @@ public sealed class Compiler(IComponentResolver resolver, Diagnostics diagnostic
         );
     }
 }
+
+
 
 

@@ -1,8 +1,7 @@
 using MinBlazor.Compiler;
 using MinBlazor.Parser;
 using MinBlazor.Services;
-using RazorCompiler = MinBlazor.Compiler.Compiler;
-using ParserComponentName = MinBlazor.Parser.ComponentName;
+using RazorCompiler = MinBlazor.Compiler.RazorCompiler;
 
 namespace MinBlazor.Cli.Steps;
 
@@ -14,14 +13,14 @@ public sealed class CompileStep : IPipelineStep
     {
         var virtuals = context.Script?.Outputs.Components
             .ToDictionary(c => c.Name, c => c.Source, StringComparer.Ordinal)
-            ?? new Dictionary<string, string>();
+            ?? [];
 
         var resolver = new IndexedComponentResolver(
             context.ComponentTable!,
             context.SourcePaths,
             virtuals);
 
-        var entryName = ParserComponentName.From(Path.GetFileNameWithoutExtension(context.RazorPath));
+        var entryName = ComponentNameParser.From(Path.GetFileNameWithoutExtension(context.RazorPath));
         var entrySource = File.ReadAllText(context.RazorPath);
 
         var diagnostics = new Diagnostics();

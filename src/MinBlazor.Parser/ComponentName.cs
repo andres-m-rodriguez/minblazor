@@ -1,6 +1,6 @@
 namespace MinBlazor.Parser;
 
-public static class ComponentName
+public static class ComponentNameParser
 {
     public static string Of(RazorNode node)
     {
@@ -29,3 +29,5 @@ public static class ComponentName
         return sb.ToString();
     }
 }
+
+

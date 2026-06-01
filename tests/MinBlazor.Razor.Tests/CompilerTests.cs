@@ -27,7 +27,7 @@ public class CompilerTests
         });
         var diagnostics = new Diagnostics();
 
-        var compilation = new Compiler(resolver, diagnostics)
+        var compilation = new RazorCompiler(resolver, diagnostics)
             .Compile("Index", "<Card><Counter /><NavLink /></Card>");
 
         await Assert.That(compilation.Entry.Name).IsEqualTo("Index");
@@ -50,7 +50,7 @@ public class CompilerTests
         var diagnostics = new Diagnostics();
 
         var source = "#:package Humanizer@2.14.1\n@page \"/\"\n<h1>Hi</h1>";
-        var compilation = new Compiler(resolver, diagnostics).Compile("Index", source);
+        var compilation = new RazorCompiler(resolver, diagnostics).Compile("Index", source);
 
         await Assert.That(compilation.Packages.Count).IsEqualTo(1);
         await Assert.That(compilation.Packages[0].Name).IsEqualTo("Humanizer");
@@ -64,7 +64,7 @@ public class CompilerTests
     [Test]
     public async Task SortsPackages_ForDeterministicOutput()
     {
-        var compilation = new Compiler(new MapResolver(new()), new Diagnostics())
+        var compilation = new RazorCompiler(new MapResolver(new()), new Diagnostics())
             .Compile("Index", "#:package Zebra@1.0.0\n#:package Alpha@2.0.0\n<h1>Hi</h1>");
 
         var names = compilation.Packages.Select(p => p.Name).ToList();
@@ -72,3 +72,4 @@ public class CompilerTests
         await Assert.That(names[1]).IsEqualTo("Zebra");
     }
 }
+

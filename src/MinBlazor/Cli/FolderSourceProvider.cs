@@ -1,3 +1,4 @@
+using MinBlazor.Parser;
 using MinBlazor.Index;
 using MinBlazor.Services;
 
@@ -12,8 +13,10 @@ public sealed class FolderSourceProvider(
     {
         foreach (var path in Directory.EnumerateFiles(rootDir, "*.razor", searchOption))
             yield return (
-                ComponentName.From(System.IO.Path.GetFileNameWithoutExtension(path)),
+                ComponentNameParser.From(System.IO.Path.GetFileNameWithoutExtension(path)),
                 path
             );
     }
 }
+
+

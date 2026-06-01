@@ -16,7 +16,7 @@ public sealed class Analyzer
             {
                 case NodeKind.ComponentOpen:
                 {
-                    var name = ComponentName.Of(node);
+                    var name = ComponentNameParser.Of(node);
                     components.Add(name);
                     stack.Push((name, []));
                     break;
@@ -24,7 +24,7 @@ public sealed class Analyzer
 
                 case NodeKind.ComponentSelfClose:
                 {
-                    var name = ComponentName.Of(node);
+                    var name = ComponentNameParser.Of(node);
                     components.Add(name);
                     if (stack.Count > 0)
                         stack.Peek().Children.Add(new ComponentNode(name, []));
@@ -57,3 +57,4 @@ public sealed class Analyzer
         return new ComponentGraph(roots, components);
     }
 }
+

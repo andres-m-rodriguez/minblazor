@@ -43,7 +43,7 @@ public sealed class ComponentCompletionHandler : ICompletionHandler
         if (!available.IsSuccess)
             return Task.FromResult(new CompletionList());
 
-        var current = ComponentName.From(Path.GetFileNameWithoutExtension(path));
+        var current = ComponentNameParser.From(Path.GetFileNameWithoutExtension(path));
 
         var items = available
             .Value!.Where(name =>
@@ -73,3 +73,4 @@ public sealed class ComponentCompletionHandler : ICompletionHandler
         return Math.Min(i + position.Character, text.Length);
     }
 }
+
