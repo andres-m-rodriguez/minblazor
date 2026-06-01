@@ -21,7 +21,6 @@ public sealed class Pipeline(IOutput output)
 {
     // Indexes the folder and runs Build.cs BeforeCompile, then compiles the entry and its
     // dependency closure. No scaffold is written and dotnet is not invoked.
-
     public Result<Compiled> Compile(string razorPath, string scaffoldDir)
     {
         var resolved = Resolve(razorPath, scaffoldDir);
@@ -40,6 +39,51 @@ public sealed class Pipeline(IOutput output)
         return Result<Compiled>.Ok(
             new Compiled(compilation, resolved.Value!.Script, diagnostics.Items)
         );
+    }
+
+    // Runs Build.cs BeforeCompile, scans the folder and package assemblies, and returns a
+    // populated ComponentTable. No razor parsing or BFS — this is the pre-compilation step
+    // that builds the full component index before the compiler runs.
+    public Result<ComponentTable> Prebuild(string razorPath)
+    {
+        var sourceDir = Path.GetDirectoryName(razorPath)!;
+        var scaffoldDir = CacheDirectory(razorPath);
+
+        var table = new ComponentTable();
+
+        foreach (var (name, _) in new FolderSourceProvider(sourceDir).GetComponents())
+            table.Add(new IndexedComponent(name, ComponentKind.Source, Namespace: null));
+
+        var scriptResult = BuildScript.Load(sourceDir, scaffoldDir, output.Info);
+        if (!scriptResult.IsSuccess)
+            return Result<ComponentTable>.Fail(scriptResult.Error!);
+
+        var script = scriptResult.Value;
+
+        if (script is not null)
+        {
+            var before = script.RunBeforeCompile();
+            if (!before.IsSuccess)
+                return Result<ComponentTable>.Fail(before.Error!);
+
+            foreach (var component in script.Outputs.Components)
+                table.Add(new IndexedComponent(component.Name, ComponentKind.Virtual, Namespace: null));
+        }
+
+        var binDir = FindBuildOutput(sourceDir);
+        if (binDir is not null)
+        {
+            var packageNames = FolderPackages(sourceDir)
+                .Concat(script?.Outputs.Packages.Select(p => p.Name) ?? [])
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            var scanner = new AssemblyScanner(new BinDirectoryAssemblyProvider(binDir));
+            foreach (var component in scanner.Scan(packageNames))
+                table.Add(component);
+        }
+
+        return Result<ComponentTable>.Ok(table);
     }
 
     // Every component a file can use: the .razor in its folder, Build.cs virtual components,
