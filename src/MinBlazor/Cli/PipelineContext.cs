@@ -5,9 +5,10 @@ using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
-public sealed class PipelineContext(string razorPath)
+public sealed class PipelineContext(string razorPath, bool clean = false)
 {
     public string RazorPath { get; } = razorPath;
+    public bool Clean { get; } = clean;
 
     // Set by PrebuildStep
     public ComponentTable? ComponentTable { get; set; }
@@ -17,4 +18,7 @@ public sealed class PipelineContext(string razorPath)
     // Set by CompileStep
     public Compilation? Compilation { get; set; }
     public List<Diagnostic> Diagnostics { get; } = [];
+
+    // Set by ScaffoldStep
+    public string? ScaffoldDir { get; set; }
 }

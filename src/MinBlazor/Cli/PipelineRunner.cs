@@ -10,6 +10,7 @@ public sealed class PipelineRunner(IOutput output)
     [
         new PrebuildStep(output),
         new CompileStep(),
+        new ScaffoldStep(),
     ];
 
     public Result RunUpTo(PipelineStep target, PipelineContext context)
