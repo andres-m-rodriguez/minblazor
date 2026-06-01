@@ -1,5 +1,6 @@
-using MinBlazor.Index;
 using MinBlazor.Compiler;
+using MinBlazor.Core;
+using MinBlazor.Index;
 using MinBlazor.Services;
 
 namespace MinBlazor.Cli;

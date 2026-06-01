@@ -1,12 +1,13 @@
 using MinBlazor.Compiler;
+using MinBlazor.Core;
 using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
-public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagnostics)
+public sealed class RazorCompiler(IComponentResolver resolver, IDiagnostics diagnostics)
 {
     private readonly IComponentResolver _resolver = resolver;
-    private readonly Diagnostics _diagnostics = diagnostics;
+    private readonly IDiagnostics _diagnostics = diagnostics;
     private readonly Analyzer _analyzer = new();
     private readonly Transformer _transformer = new();
 
@@ -72,6 +73,8 @@ public sealed class RazorCompiler(IComponentResolver resolver, Diagnostics diagn
         );
     }
 }
+
+
 
 
 

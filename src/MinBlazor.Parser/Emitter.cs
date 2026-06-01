@@ -1,7 +1,6 @@
 using System.Text;
-using MinBlazor.Parser;
 
-namespace MinBlazor.Compiler;
+namespace MinBlazor.Parser;
 
 public sealed class Emitter
 {
@@ -15,7 +14,7 @@ public sealed class Emitter
         return builder.ToString();
     }
 
-    public IReadOnlyList<string> EmitHostTags(Document document, IReadOnlyList<RazorNode> hostTags)
+    public IReadOnlyList<string> EmitHostTags(IReadOnlyList<RazorNode> hostTags)
     {
         var emitted = new List<string>(hostTags.Count);
 
@@ -34,7 +33,3 @@ public sealed class Emitter
         return string.Concat(tag[..(marker - 1)], tag[(marker + 1 + Markers.HostTag.Length)..]);
     }
 }
-
-
-
-

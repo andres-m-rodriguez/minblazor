@@ -1,8 +1,9 @@
+using MinBlazor.Core;
 using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Razor;
 
-public sealed class Diagnostics
+public sealed class Diagnostics : IDiagnostics
 {
     private readonly List<Diagnostic> _items = [];
 

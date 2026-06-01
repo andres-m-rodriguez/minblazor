@@ -76,7 +76,7 @@ public sealed class Scaffold
     private static void WriteComponent(string targetDir, Emitter emitter, CompiledComponent component, List<string> hostTags, HashSet<string> produced)
     {
         Produce(produced, Path.Combine(targetDir, $"{component.Name}.razor"), emitter.Emit(component.Document));
-        hostTags.AddRange(emitter.EmitHostTags(component.Document, component.HostTags));
+        hostTags.AddRange(emitter.EmitHostTags(component.HostTags));
     }
 
     private static void Produce(HashSet<string> produced, string path, string content)
@@ -98,3 +98,4 @@ public sealed class Scaffold
                 File.Delete(file);
     }
 }
+
