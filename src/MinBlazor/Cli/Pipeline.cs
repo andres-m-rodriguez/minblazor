@@ -80,11 +80,7 @@ public sealed class Pipeline(IOutput output)
         if (binDir is not null)
         {
             var entryDoc = new Parser(new Lexer(File.ReadAllText(razorPath))).Parse();
-            var packages = new Scanner().Packages(entryDoc)
-                .ToDictionary(p => p.Name, p => p, StringComparer.OrdinalIgnoreCase);
-            foreach (var p in script?.Outputs.Packages ?? [])
-                packages[p.Name] = p;
-            var packageNames = packages.Keys.ToList();
+            var packageNames = new Scanner().Packages(entryDoc).Select(p => p.Name).ToList();
 
             var scanner = new AssemblyScanner();
             scanner.Load(new BinDirectoryAssemblyProvider(binDir));
@@ -253,15 +249,8 @@ public sealed class Pipeline(IOutput output)
         return table;
     }
 
-    // Every package the app references: #:package directives plus Build.cs AddPackage.
-    private static IReadOnlyList<string> PackageNames(Compiled result)
-    {
-        var names = result.Compilation.Packages.Select(package => package.Name);
-        if (result.Script is not null)
-            names = names.Concat(result.Script.Outputs.Packages.Select(package => package.Name));
-
-        return names.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-    }
+    private static IReadOnlyList<string> PackageNames(Compiled result) =>
+        result.Compilation.Packages.Select(p => p.Name).ToList();
 
     public static string CacheDirectory(string razorPath)
     {

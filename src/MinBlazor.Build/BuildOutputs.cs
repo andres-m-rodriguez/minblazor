@@ -1,11 +1,9 @@
 using MinBlazor.Build.Models;
-using MinBlazor.Razor.Models;
 
 namespace MinBlazor.Build;
 
 public sealed class BuildOutputs
 {
-    public List<PackageReference> Packages { get; } = [];
     public Dictionary<string, string> Properties { get; } = new(StringComparer.Ordinal);
     public List<string> HeadTags { get; } = [];
     public List<BuildAsset> Assets { get; } = [];

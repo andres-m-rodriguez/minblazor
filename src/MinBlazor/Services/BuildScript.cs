@@ -23,7 +23,8 @@ public sealed class BuildScript
         MethodInfo? after,
         string sourceDir,
         string outputDir,
-        Action<string> log)
+        Action<string> log
+    )
     {
         _beforeCompile = before;
         _afterCompile = after;
@@ -40,7 +41,13 @@ public sealed class BuildScript
         if (_beforeCompile is null)
             return Result.Ok();
 
-        var context = new BeforeCompileContext(_outputs, _sourceDir, _outputDir, _environment, _log);
+        var context = new BeforeCompileContext(
+            _outputs,
+            _sourceDir,
+            _outputDir,
+            _environment,
+            _log
+        );
         return Invoke(_beforeCompile, context);
     }
 
@@ -49,7 +56,14 @@ public sealed class BuildScript
         if (_afterCompile is null)
             return Result.Ok();
 
-        var context = new AfterCompileContext(_outputs, _sourceDir, _outputDir, _environment, compilation, _log);
+        var context = new AfterCompileContext(
+            _outputs,
+            _sourceDir,
+            _outputDir,
+            _environment,
+            compilation,
+            _log
+        );
         return Invoke(_afterCompile, context);
     }
 
@@ -62,7 +76,9 @@ public sealed class BuildScript
         }
         catch (TargetInvocationException ex)
         {
-            return Result.Fail($"{FileName} {method.Name} failed: {ex.InnerException?.Message ?? ex.Message}");
+            return Result.Fail(
+                $"{FileName} {method.Name} failed: {ex.InnerException?.Message ?? ex.Message}"
+            );
         }
         catch (Exception ex)
         {

@@ -14,7 +14,6 @@ public class BuildScriptTests
             {
                 ctx.AddOption("Greeting", "hi");
                 ctx.AddComponent("Generated", "<p>generated</p>");
-                ctx.AddPackage("Humanizer", "2.14.1");
             }
 
             public static void AfterCompile(AfterCompileContext ctx)
@@ -39,7 +38,6 @@ public class BuildScriptTests
         await Assert.That(script.RunBeforeCompile().IsSuccess).IsTrue();
         await Assert.That(script.Outputs.Options["Greeting"]).IsEqualTo("hi");
         await Assert.That(script.Outputs.Components.Single().Name).IsEqualTo("Generated");
-        await Assert.That(script.Outputs.Packages.Single().Name).IsEqualTo("Humanizer");
 
         var info = new CompilationInfo("Index", ["Index", "Generated"], []);
         await Assert.That(script.RunAfterCompile(info).IsSuccess).IsTrue();

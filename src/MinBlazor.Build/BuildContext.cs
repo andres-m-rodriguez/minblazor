@@ -29,9 +29,6 @@ public abstract class BuildContext
     public string OutputDirectory { get; }
     public IReadOnlyDictionary<string, string> Environment { get; }
 
-    public void AddPackage(string name, string? version = null) =>
-        _outputs.Packages.Add(new PackageReference(name, version));
-
     public void AddProperty(string name, string value) => _outputs.Properties[name] = value;
 
     public void AddHeadTag(string html) => _outputs.HeadTags.Add(html);

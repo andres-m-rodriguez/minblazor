@@ -34,7 +34,7 @@ public sealed class Scaffold
             WriteBuildOutputs(targetDir, produced, hostTags, build);
 
         var hasDependencies = File.Exists(Path.Combine(sourceDir, DependenciesFile));
-        var packages = MergePackages(compilation.Packages, build);
+        var packages = compilation.Packages;
         var properties = build?.Properties ?? EmptyProperties;
 
         Produce(produced, Path.Combine(targetDir, ".gitignore"), "*\n");
@@ -72,19 +72,6 @@ public sealed class Scaffold
             File.WriteAllBytes(path, asset.Contents);
     }
 
-    private static IReadOnlyList<PackageReference> MergePackages(IReadOnlyList<PackageReference> compilationPackages, BuildOutputs? build)
-    {
-        var merged = new Dictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var package in compilationPackages)
-            merged[package.Name] = package;
-
-        if (build is not null)
-            foreach (var package in build.Packages)
-                merged[package.Name] = package;
-
-        return merged.Values.OrderBy(package => package.Name, StringComparer.Ordinal).ToList();
-    }
 
     private static void WriteComponent(string targetDir, Emitter emitter, CompiledComponent component, List<string> hostTags, HashSet<string> produced)
     {

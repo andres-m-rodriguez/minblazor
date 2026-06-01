@@ -62,7 +62,6 @@ and `Uses(name)`).
 
 | Method | Effect |
 | --- | --- |
-| `AddPackage(name, version?)` | add a NuGet `<PackageReference>` |
 | `AddProperty(name, value)` | add an MSBuild property to the csproj |
 | `AddHeadTag(html)` | inject into the host page `<head>` |
 | `AddStaticAsset(path, string\|bytes)` | write a `wwwroot/...` file |
