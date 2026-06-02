@@ -11,7 +11,7 @@ public sealed class PipelineRunner(IOutput output)
         new PrebuildStep(output),
         new CompileStep(),
         new ScaffoldStep(),
-        new BuildStep(output),
+        new BuildStep(),
     ];
 
     public Result RunUpTo(PipelineStep target, PipelineContext context)

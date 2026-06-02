@@ -29,10 +29,11 @@ public sealed class Build2Command(IOutput output)
         output.Info($"components: {string.Join(", ", c.Components.Select(x => x.Name))}");
         output.Info($"packages:   {string.Join(", ", c.Packages.Select(x => x.Name))}");
 
-        foreach (var d in context.Diagnostics)
+        foreach (var d in context.Diagnostics.Items)
             output.Info($"{d.Severity}: {d.Message}");
 
         return 0;
     }
 }
+
 

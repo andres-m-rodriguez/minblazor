@@ -16,10 +16,7 @@ public sealed class BuildCommand(IOutput output)
             return 1;
         }
 
-        var builder = new Builder();
-        builder.Output += output.Info;
-
-        var built = builder.Build(prepared.Value!);
+        var built = new Builder().Build(prepared.Value!);
         if (!built.IsSuccess)
         {
             output.Error(built.Error!);
@@ -30,3 +27,4 @@ public sealed class BuildCommand(IOutput output)
         return 0;
     }
 }
+

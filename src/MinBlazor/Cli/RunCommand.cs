@@ -27,12 +27,12 @@ public sealed class RunCommand
 
     private int Serve(string scaffoldDir, int port, bool openBrowser)
     {
-        var builder = new Builder();
-        builder.Output += _output.Info;
-
         _output.Info("Building (first run may take a while)\n");
 
-        var built = builder.Build(scaffoldDir);
+        var diagnostics = new MinBlazor.Core.Diagnostics();
+        var built = new Builder().Build(scaffoldDir, diagnostics);
+        foreach (var d in diagnostics.Items.Where(d => d.Severity != MinBlazor.Core.DiagnosticSeverity.Info))
+            _output.Info($"{d.Severity}: {d.Message}");
         if (!built.IsSuccess)
         {
             _output.Error(built.Error!);

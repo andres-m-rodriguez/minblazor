@@ -8,6 +8,8 @@ public sealed class Diagnostics : IDiagnostics
 
     public IReadOnlyList<Diagnostic> Items => _items;
 
+    public void Info(string message) => _items.Add(new Diagnostic(DiagnosticSeverity.Info, message));
+
     public void Warning(string message) => Add(DiagnosticSeverity.Warning, message);
 
     public void Error(string message) => Add(DiagnosticSeverity.Error, message);
@@ -15,3 +17,4 @@ public sealed class Diagnostics : IDiagnostics
     private void Add(DiagnosticSeverity severity, string message) =>
         _items.Add(new Diagnostic(severity, message));
 }
+

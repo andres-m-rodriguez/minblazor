@@ -1,14 +1,11 @@
-using MinBlazor.Core;
 using System.Diagnostics;
-using MinBlazor.Models;
+using MinBlazor.Core;
 
 namespace MinBlazor.Services;
 
 public sealed class Builder
 {
-    public event Action<string>? Output;
-
-    public Result<string> Build(string projectDir)
+    public Result<string> Build(string projectDir, IDiagnostics? diagnostics = null)
     {
         using var process = new Process
         {
@@ -22,8 +19,8 @@ public sealed class Builder
             },
         };
 
-        process.OutputDataReceived += (_, e) => Emit(e.Data);
-        process.ErrorDataReceived += (_, e) => Emit(e.Data);
+        process.OutputDataReceived += (_, e) => { if (e.Data is not null) diagnostics?.Info(e.Data); };
+        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) diagnostics?.Info(e.Data); };
 
         process.Start();
         process.BeginOutputReadLine();
@@ -39,12 +36,6 @@ public sealed class Builder
             : Result<string>.Ok(manifest);
     }
 
-    private void Emit(string? line)
-    {
-        if (line is not null)
-            Output?.Invoke(line);
-    }
-
     private static string? FindManifest(string projectDir)
     {
         var binDir = Path.Combine(projectDir, "bin");
@@ -57,4 +48,3 @@ public sealed class Builder
             .FirstOrDefault();
     }
 }
-
