@@ -1,5 +1,9 @@
+using Microsoft.Build.Locator;
 using MinBlazor.Cli;
 using MinBlazor.Models;
+
+// Must be called before any Microsoft.Build type is accessed.
+MSBuildLocator.RegisterDefaults();
 
 IOutput output = new ConsoleOutput();
 

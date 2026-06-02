@@ -73,8 +73,8 @@ public sealed class ScaffoldStep : IPipelineStep
     {
         switch (entry)
         {
-            case ProjectFile f:
-                Produce(scaffoldDir, "App.csproj", f.Content.ToString(), produced);
+            case ProjectFile:
+                // Project created in-memory by BuildStep — no .csproj on disk
                 break;
 
             case SourceFile f:
@@ -171,5 +171,6 @@ public sealed class ScaffoldStep : IPipelineStep
         return null;
     }
 }
+
 
 

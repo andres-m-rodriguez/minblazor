@@ -10,19 +10,20 @@ public sealed class BuildStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
-        var buildDiagnostics = new Diagnostics();
-        var built = new Builder().Build(context.ScaffoldDir!, buildDiagnostics);
+        var buildProperties = context.Script?.Outputs.Properties
+            ?? new Dictionary<string, string>();
+
+        var built = new InProcessBuilder().Build(
+            context.ScaffoldDir!,
+            context.Compilation!,
+            buildProperties,
+            AppInfo.BlazorPackageVersion,
+            context.Diagnostics);
 
         if (!built.IsSuccess)
-        {
-            foreach (var d in buildDiagnostics.Items)
-                context.Diagnostics.Warning(d.Message);
-
             return Result.Fail(built.Error!);
-        }
 
         context.ManifestPath = built.Value;
         return Result.Ok();
     }
 }
-
