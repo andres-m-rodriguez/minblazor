@@ -10,7 +10,8 @@ public sealed class RunCommand(IOutput output)
             options.RazorFile,
             clean: options.Clean,
             port: options.Port,
-            openBrowser: options.OpenBrowser);
+            openBrowser: options.OpenBrowser,
+            noShadow: options.NoShadow);
 
         var result = new PipelineRunner(output).RunUpTo(PipelineStep.Serve, context);
 

@@ -8,7 +8,7 @@ public sealed class BuildCommand(IOutput output)
     {
         output.Info($"building {Path.GetFileName(options.RazorFile)}\n");
 
-        var context = new PipelineContext(options.RazorFile, clean: options.Clean);
+        var context = new PipelineContext(options.RazorFile, clean: options.Clean, noShadow: options.NoShadow);
         var result = new PipelineRunner(output).RunUpTo(PipelineStep.Build, context);
 
         foreach (var d in context.Diagnostics.Items.Where(d =>
@@ -25,3 +25,4 @@ public sealed class BuildCommand(IOutput output)
         return 0;
     }
 }
+

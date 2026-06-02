@@ -19,6 +19,9 @@ public sealed class ShadowStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
+        if (context.NoShadow)
+            return Result.Ok();
+
         var sourceDir = Path.GetDirectoryName(context.RazorPath)!;
         var shadowFolder = Path.Combine(sourceDir, ShadowDir);
         var refsFolder = Path.Combine(shadowFolder, RefsDir);

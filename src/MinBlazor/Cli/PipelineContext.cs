@@ -9,12 +9,14 @@ public sealed class PipelineContext(
     string razorPath,
     bool clean = false,
     int port = AppInfo.DefaultPort,
-    bool openBrowser = false)
+    bool openBrowser = false,
+    bool noShadow = false)
 {
     public string RazorPath { get; } = razorPath;
     public bool Clean { get; } = clean;
     public int Port { get; } = port;
     public bool OpenBrowser { get; } = openBrowser;
+    public bool NoShadow { get; } = noShadow;
 
     public Diagnostics Diagnostics { get; } = new();
 

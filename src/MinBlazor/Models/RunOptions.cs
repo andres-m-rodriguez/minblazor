@@ -6,4 +6,6 @@ public sealed record RunOptions
     public int Port { get; init; } = AppInfo.DefaultPort;
     public bool OpenBrowser { get; init; } = true;
     public bool Clean { get; init; }
+    public bool NoShadow { get; init; }
 }
+

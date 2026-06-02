@@ -26,6 +26,7 @@ public static class ArgumentParser
         int port = AppInfo.DefaultPort;
         bool open = true;
         bool clean = false;
+        bool noShadow = false;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -47,6 +48,10 @@ public static class ArgumentParser
                     clean = true;
                     break;
 
+                case "--no-shadow":
+                    noShadow = true;
+                    break;
+
                 default:
                     if (arg.StartsWith('-'))
                         return Fail($"Unknown option '{arg}'.");
@@ -66,23 +71,21 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(
-            new CliCommand.Run(
-                new RunOptions
-                {
-                    RazorFile = razorPath,
-                    Port = port,
-                    OpenBrowser = open,
-                    Clean = clean,
-                }
-            )
-        );
+        return Ok(new CliCommand.Run(new RunOptions
+        {
+            RazorFile = razorPath,
+            Port = port,
+            OpenBrowser = open,
+            Clean = clean,
+            NoShadow = noShadow,
+        }));
     }
 
     private static Result<CliCommand> ParseBuild(string[] args)
     {
         string? file = null;
         bool clean = false;
+        bool noShadow = false;
 
         for (int i = 1; i < args.Length; i++)
         {
@@ -91,6 +94,10 @@ public static class ArgumentParser
             {
                 case "--clean":
                     clean = true;
+                    break;
+
+                case "--no-shadow":
+                    noShadow = true;
                     break;
 
                 default:
@@ -112,7 +119,7 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(new CliCommand.Build(new BuildOptions { RazorFile = razorPath, Clean = clean }));
+        return Ok(new CliCommand.Build(new BuildOptions { RazorFile = razorPath, Clean = clean, NoShadow = noShadow }));
     }
 
     private static Result<CliCommand> Ok(CliCommand command) => Result<CliCommand>.Ok(command);

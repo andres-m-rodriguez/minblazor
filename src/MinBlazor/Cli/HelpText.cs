@@ -14,8 +14,9 @@ internal static class HelpText
         Options:
           -p, --port <n>   Port to serve on (default 5005)   (run only)
               --no-open    Don't open the browser             (run only)
-              --clean      Delete the build cache first
+              --clean      Delete the build cache first`n              --no-shadow  Skip the editor shadow project generation
           -h, --help       Show help
           -v, --version    Show version
         """;
 }
+
