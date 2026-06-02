@@ -16,7 +16,7 @@ public sealed class RunCommand(IOutput output)
 
         foreach (var d in context.Diagnostics.Items.Where(d =>
             d.Severity != MinBlazor.Core.DiagnosticSeverity.Info))
-            output.Info($"{d.Severity}: {d.Message}");
+            output.Info(d.Message);
 
         if (!result.IsSuccess)
         {

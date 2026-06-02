@@ -9,9 +9,16 @@ public sealed class BuildStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
-        var built = new Builder().Build(context.ScaffoldDir!, context.Diagnostics);
+        var buildDiagnostics = new Diagnostics();
+        var built = new Builder().Build(context.ScaffoldDir!, buildDiagnostics);
+
         if (!built.IsSuccess)
+        {
+            foreach (var d in buildDiagnostics.Items)
+                context.Diagnostics.Warning(d.Message);
+
             return Result.Fail(built.Error!);
+        }
 
         context.ManifestPath = built.Value;
         return Result.Ok();
