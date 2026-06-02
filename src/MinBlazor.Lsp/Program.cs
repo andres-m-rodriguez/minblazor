@@ -7,8 +7,6 @@ var server = await LanguageServer.From(options =>
         .WithInput(Console.OpenStandardInput())
         .WithOutput(Console.OpenStandardOutput())
         .WithServices(services => services.AddSingleton<DocumentStore>())
-        .WithHandler<RazorTextSync>()
-        .WithHandler<ComponentCompletionHandler>()
-);
+        .WithHandler<RazorTextSync>());
 
 await server.WaitForExit;

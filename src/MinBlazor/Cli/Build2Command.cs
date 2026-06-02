@@ -35,5 +35,3 @@ public sealed class Build2Command(IOutput output)
         return 0;
     }
 }
-
-

@@ -1,5 +1,4 @@
 using MinBlazor.Models;
-using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
@@ -9,22 +8,16 @@ public sealed class BuildCommand(IOutput output)
     {
         output.Info($"building {Path.GetFileName(options.RazorFile)}\n");
 
-        var prepared = new Pipeline(output).Prepare(options.RazorFile, options.Clean);
-        if (!prepared.IsSuccess)
+        var context = new PipelineContext(options.RazorFile, clean: options.Clean);
+        var result = new PipelineRunner(output).RunUpTo(PipelineStep.Build, context);
+
+        if (!result.IsSuccess)
         {
-            output.Error(prepared.Error!);
+            output.Error(result.Error!);
             return 1;
         }
 
-        var built = new Builder().Build(prepared.Value!);
-        if (!built.IsSuccess)
-        {
-            output.Error(built.Error!);
-            return 1;
-        }
-
-        output.Info($"\nBuild succeeded.\nProject: {prepared.Value!}");
+        output.Info($"\nBuild succeeded.\nProject: {context.ScaffoldDir}");
         return 0;
     }
 }
-
