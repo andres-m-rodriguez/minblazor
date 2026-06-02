@@ -1,0 +1,14 @@
+{
+  "scopeName": "source.minblazor.injection",
+  "injectionSelector": "L:text.html.cshtml",
+  "patterns": [
+    {
+      "comment": "Highlight @hostTag like other Blazor directive attributes",
+      "match": "(@)(hostTag)\\b",
+      "captures": {
+        "1": { "name": "punctuation.definition.keyword.razor" },
+        "2": { "name": "keyword.control.flow.razor" }
+      }
+    }
+  ]
+}

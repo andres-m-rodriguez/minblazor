@@ -2,7 +2,7 @@
   "name": "minblazor-lsp",
   "displayName": "minblazor",
   "description": "Component IntelliSense for minblazor .razor files",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "publisher": "minblazor",
   "license": "MIT",
   "repository": {
@@ -21,7 +21,15 @@
     "workspaceContains:**/*.razor"
   ],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "grammars": [
+      {
+        "scopeName": "source.minblazor.injection",
+        "path": "./syntaxes/minblazor.injection.tmLanguage.json",
+        "injectTo": ["text.html.cshtml"]
+      }
+    ]
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./"
