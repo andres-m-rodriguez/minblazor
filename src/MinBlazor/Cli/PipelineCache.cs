@@ -17,4 +17,3 @@ public static class PipelineCache
         return Path.Combine(Path.GetTempPath(), "minblazor", hash);
     }
 }
-

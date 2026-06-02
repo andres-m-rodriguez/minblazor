@@ -1,5 +1,5 @@
-using MinBlazor.Core;
 using MinBlazor.Cli.Steps;
+using MinBlazor.Core;
 
 namespace MinBlazor.Cli;
 
@@ -10,6 +10,7 @@ public sealed class PipelineRunner(IOutput output)
         new PrebuildStep(output),
         new ShadowStep(),
         new CompileStep(),
+        new AfterCompileStep(),
         new ScaffoldStep(),
         new RestoreStep(),
         new BuildStep(),
@@ -26,8 +27,11 @@ public sealed class PipelineRunner(IOutput output)
             var countBefore = context.Diagnostics.Items.Count;
             var result = step.Execute(context);
 
-            foreach (var d in context.Diagnostics.Items.Skip(countBefore)
-                .Where(d => d.Severity != DiagnosticSeverity.Info))
+            foreach (
+                var d in context
+                    .Diagnostics.Items.Skip(countBefore)
+                    .Where(d => d.Severity != DiagnosticSeverity.Info)
+            )
                 output.Info(d.Message);
 
             if (!result.IsSuccess)
@@ -37,3 +41,4 @@ public sealed class PipelineRunner(IOutput output)
         return Result.Ok();
     }
 }
+

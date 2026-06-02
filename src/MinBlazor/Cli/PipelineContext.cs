@@ -10,7 +10,8 @@ public sealed class PipelineContext(
     bool clean = false,
     int port = AppInfo.DefaultPort,
     bool openBrowser = false,
-    bool noShadow = false)
+    bool noShadow = false
+)
 {
     public string RazorPath { get; } = razorPath;
     public bool Clean { get; } = clean;
