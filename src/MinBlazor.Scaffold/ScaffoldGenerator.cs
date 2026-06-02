@@ -31,8 +31,12 @@ public sealed class ScaffoldGenerator
             ? "\n    <Compile Include=\"../Build.cs\" />"
             : "";
 
-        var sourceDirItems = string.Concat(sourceDirectories.Select(dir =>
-            $"\n    <Compile Include=\"{dir.Replace('\\', '/')}/**/*.cs\" />"));
+        var sourceDirItems = string.Concat(sourceDirectories.SelectMany(dir =>
+            new[]
+            {
+                $"\n    <Compile Include=\"{dir.Replace('\\', '/')}/**/*.cs\" />",
+                $"\n    <Content Include=\"{dir.Replace('\\', '/')}/**/*.razor\" />",
+            }));
 
         var csproj = $"""
             <Project Sdk="Microsoft.NET.Sdk.Razor">
