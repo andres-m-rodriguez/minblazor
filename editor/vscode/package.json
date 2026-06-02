@@ -2,7 +2,7 @@
   "name": "minblazor-lsp",
   "displayName": "minblazor",
   "description": "Component IntelliSense for minblazor .razor files",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "publisher": "minblazor",
   "license": "MIT",
   "repository": {
@@ -43,6 +43,7 @@
     "typescript": "^5.4.0"
   }
 }
+
 
 
 
