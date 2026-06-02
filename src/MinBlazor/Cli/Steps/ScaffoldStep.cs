@@ -171,6 +171,3 @@ public sealed class ScaffoldStep : IPipelineStep
         return null;
     }
 }
-
-
-

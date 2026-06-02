@@ -33,17 +33,23 @@ public sealed class ShadowStep : IPipelineStep
 
         var dllPaths = GetMinBlazorDlls();
         var hasBuildCs = File.Exists(Path.Combine(sourceDir, BuildFile));
-        var sourceDirectories = context.Script?.Outputs.SourceDirectories
-            ?? (IReadOnlyList<string>)[];
+        var sourceDirectories =
+            context.Script?.Outputs.SourceDirectories ?? (IReadOnlyList<string>)[];
 
         var (csproj, imports) = ScaffoldGenerator.GenerateShadowProject(
-            AppInfo.BlazorPackageVersion, packages, dllPaths, hasBuildCs, sourceDirectories);
+            AppInfo.BlazorPackageVersion,
+            packages,
+            dllPaths,
+            hasBuildCs,
+            sourceDirectories
+        );
 
         var csprojStr = csproj.ToString();
         var importsStr = imports.ToString();
 
         var csprojChanged = !File.Exists(csprojPath) || File.ReadAllText(csprojPath) != csprojStr;
-        var importsChanged = !File.Exists(importsPath) || File.ReadAllText(importsPath) != importsStr;
+        var importsChanged =
+            !File.Exists(importsPath) || File.ReadAllText(importsPath) != importsStr;
 
         if (!csprojChanged && !importsChanged && DllsUpToDate(dllPaths, refsFolder))
             return Result.Ok();
@@ -63,19 +69,21 @@ public sealed class ShadowStep : IPipelineStep
     }
 
     private static IReadOnlyList<string> GetMinBlazorDlls() =>
-    [
-        typeof(BuildContext).Assembly.Location,
-        typeof(MinBlazor.Core.Result).Assembly.Location,
-        typeof(RazorParser).Assembly.Location,
-    ];
+        [
+            typeof(BuildContext).Assembly.Location,
+            typeof(MinBlazor.Core.Result).Assembly.Location,
+            typeof(RazorParser).Assembly.Location,
+        ];
 
     private static bool DllsUpToDate(IReadOnlyList<string> sources, string refsFolder)
     {
         foreach (var src in sources)
         {
             var dest = Path.Combine(refsFolder, Path.GetFileName(src));
-            if (!File.Exists(dest)) return false;
-            if (File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dest)) return false;
+            if (!File.Exists(dest))
+                return false;
+            if (File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dest))
+                return false;
         }
         return true;
     }
@@ -85,7 +93,10 @@ public sealed class ShadowStep : IPipelineStep
         foreach (var src in sources)
         {
             var dest = Path.Combine(refsFolder, Path.GetFileName(src));
-            if (!File.Exists(dest) || File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dest))
+            if (
+                !File.Exists(dest)
+                || File.GetLastWriteTimeUtc(src) > File.GetLastWriteTimeUtc(dest)
+            )
                 File.Copy(src, dest, overwrite: true);
         }
     }
@@ -96,7 +107,8 @@ public sealed class ShadowStep : IPipelineStep
         if (File.Exists(gitignorePath))
         {
             var existing = File.ReadAllText(gitignorePath);
-            if (existing.Contains(ShadowDir)) return;
+            if (existing.Contains(ShadowDir))
+                return;
             File.AppendAllText(gitignorePath, $"\n{ShadowDir}/\n");
         }
         else
@@ -119,8 +131,16 @@ public sealed class ShadowStep : IPipelineStep
             },
         };
 
-        process.OutputDataReceived += (_, e) => { if (e.Data is not null) diagnostics.Info(e.Data); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) diagnostics.Info(e.Data); };
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+                diagnostics.Info(e.Data);
+        };
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+                diagnostics.Info(e.Data);
+        };
 
         process.Start();
         process.BeginOutputReadLine();
@@ -129,7 +149,8 @@ public sealed class ShadowStep : IPipelineStep
 
         return process.ExitCode == 0
             ? Result.Ok()
-            : Result.Fail($"dotnet restore failed for shadow project (exit code {process.ExitCode}).");
+            : Result.Fail(
+                $"dotnet restore failed for shadow project (exit code {process.ExitCode})."
+            );
     }
 }
-

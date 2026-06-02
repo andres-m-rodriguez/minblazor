@@ -33,7 +33,9 @@ public sealed class RazorCompiler(IComponentResolver resolver, IDiagnostics diag
             var resolved = _resolver.TryResolve(name, out var source);
             if (resolved == ResolveResult.NotFound)
             {
-                _diagnostics.Warning($"Could not resolve component '{name}' (referenced in '{parent}').");
+                _diagnostics.Warning(
+                    $"Could not resolve component '{name}' (referenced in '{parent}')."
+                );
                 continue;
             }
             if (resolved == ResolveResult.External)

@@ -41,4 +41,3 @@ public sealed class ServeStep(IOutput output) : IPipelineStep
         return Result.Ok();
     }
 }
-

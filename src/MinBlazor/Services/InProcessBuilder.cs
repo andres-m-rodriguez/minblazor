@@ -19,9 +19,8 @@ public sealed class InProcessBuilder
         var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
         var root = ProjectRootElement.Create(projectCollection);
 
-        // Virtual path gives MSBuild the base directory for glob resolution
-        // without writing the file to disk
-        root.FullPath = Path.Combine(scaffoldDir, "App.csproj");
+        var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
+        root.FullPath = csprojPath;
         root.Sdk = "Microsoft.NET.Sdk.BlazorWebAssembly";
 
         var props = root.AddPropertyGroup();
@@ -41,6 +40,7 @@ public sealed class InProcessBuilder
             pkgs.AddItem("PackageReference", pkg.Name,
                 pkg.Version is null ? [] : [new KeyValuePair<string, string>("Version", pkg.Version)]);
 
+        root.Save(); // write to scaffold temp dir so SDK resolution works
         var instance = new ProjectInstance(root);
         var logger = new DiagnosticsLogger(diagnostics);
         var parameters = new BuildParameters(projectCollection)
@@ -87,4 +87,5 @@ public sealed class InProcessBuilder
         public void Shutdown() { }
     }
 }
+
 
