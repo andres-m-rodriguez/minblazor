@@ -5,10 +5,16 @@ using MinBlazor.Services;
 
 namespace MinBlazor.Cli;
 
-public sealed class PipelineContext(string razorPath, bool clean = false)
+public sealed class PipelineContext(
+    string razorPath,
+    bool clean = false,
+    int port = AppInfo.DefaultPort,
+    bool openBrowser = false)
 {
     public string RazorPath { get; } = razorPath;
     public bool Clean { get; } = clean;
+    public int Port { get; } = port;
+    public bool OpenBrowser { get; } = openBrowser;
 
     public Diagnostics Diagnostics { get; } = new();
 

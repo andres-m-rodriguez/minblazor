@@ -1,13 +1,16 @@
-using MinBlazor.Core;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using MinBlazor.Core;
 using MinBlazor.Models;
 
 namespace MinBlazor.Services;
 
 public sealed class StaticAssets
 {
-    private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        PropertyNameCaseInsensitive = true,
+    };
 
     private readonly IReadOnlyList<string> _contentRoots;
     private readonly AssetNode _root;
@@ -22,15 +25,22 @@ public sealed class StaticAssets
     {
         try
         {
-            var manifest = JsonSerializer.Deserialize<AssetManifest>(File.ReadAllText(manifestPath), Options);
+            var manifest = JsonSerializer.Deserialize<AssetManifest>(
+                File.ReadAllText(manifestPath),
+                Options
+            );
             if (manifest?.ContentRoots is null || manifest.Root is null)
-                return Result<StaticAssets>.Fail($"Could not read static web assets manifest: {manifestPath}");
+                return Result<StaticAssets>.Fail(
+                    $"Could not read static web assets manifest: {manifestPath}"
+                );
 
             return Result<StaticAssets>.Ok(new StaticAssets(manifest.ContentRoots, manifest.Root));
         }
         catch (Exception ex)
         {
-            return Result<StaticAssets>.Fail($"Failed to load static web assets manifest: {ex.Message}");
+            return Result<StaticAssets>.Fail(
+                $"Failed to load static web assets manifest: {ex.Message}"
+            );
         }
     }
 
@@ -59,4 +69,3 @@ public sealed class StaticAssets
         return File.Exists(physicalPath);
     }
 }
-

@@ -13,6 +13,7 @@ public sealed class PipelineRunner(IOutput output)
         new CompileStep(),
         new ScaffoldStep(),
         new BuildStep(),
+        new ServeStep(output),
     ];
 
     public Result RunUpTo(PipelineStep target, PipelineContext context)
