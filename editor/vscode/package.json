@@ -2,7 +2,7 @@
   "name": "minblazor-lsp",
   "displayName": "minblazor",
   "description": "Component IntelliSense for minblazor .razor files",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "minblazor",
   "license": "MIT",
   "repository": {
@@ -26,7 +26,7 @@
       {
         "scopeName": "source.minblazor.injection",
         "path": "./syntaxes/minblazor.injection.tmLanguage.json",
-        "injectTo": ["text.html.cshtml"]
+        "injectTo": ["text.aspnetcorerazor"]
       }
     ]
   },
@@ -43,4 +43,6 @@
     "typescript": "^5.4.0"
   }
 }
+
+
 

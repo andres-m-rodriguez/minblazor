@@ -1,9 +1,9 @@
 {
   "scopeName": "source.minblazor.injection",
-  "injectionSelector": "L:text.html.cshtml",
+  "injectionSelector": "L:text.aspnetcorerazor",
   "patterns": [
     {
-      "comment": "Highlight @hostTag like other Blazor directive attributes",
+      "comment": "@hostTag minblazor dialect — hoist element into <head>",
       "match": "(@)(hostTag)\\b",
       "captures": {
         "1": { "name": "punctuation.definition.keyword.razor" },
