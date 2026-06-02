@@ -17,23 +17,23 @@ public sealed class RazorCompiler(IComponentResolver resolver, IDiagnostics diag
         var components = new List<CompiledComponent>();
         var packages = new Dictionary<string, PackageReference>(StringComparer.OrdinalIgnoreCase);
         var visited = new HashSet<string> { entryName };
-        var queue = new Queue<string>();
+        var queue = new Queue<(string Name, string Parent)>();
 
         foreach (var package in entry.Packages)
             packages[package.Name] = package;
 
         foreach (var reference in entry.References)
             if (visited.Add(reference))
-                queue.Enqueue(reference);
+                queue.Enqueue((reference, entryName));
 
         while (queue.Count > 0)
         {
-            var name = queue.Dequeue();
+            var (name, parent) = queue.Dequeue();
 
             var resolved = _resolver.TryResolve(name, out var source);
             if (resolved == ResolveResult.NotFound)
             {
-                _diagnostics.Warning($"Could not resolve component '{name}'.");
+                _diagnostics.Warning($"Could not resolve component '{name}' (referenced in '{parent}').");
                 continue;
             }
             if (resolved == ResolveResult.External)
@@ -47,7 +47,7 @@ public sealed class RazorCompiler(IComponentResolver resolver, IDiagnostics diag
 
             foreach (var reference in unit.References)
                 if (visited.Add(reference))
-                    queue.Enqueue(reference);
+                    queue.Enqueue((reference, name));
         }
 
         return new Compilation(
