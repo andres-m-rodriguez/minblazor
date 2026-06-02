@@ -15,6 +15,7 @@ public sealed class ShadowStep : IPipelineStep
     private const string BuildFile = "Build.cs";
 
     public PipelineStep Step => PipelineStep.Shadow;
+    public string? StartMessage => "Setting up editor support...";
 
     public Result Execute(PipelineContext context)
     {
@@ -128,3 +129,4 @@ public sealed class ShadowStep : IPipelineStep
             : Result.Fail($"dotnet restore failed for shadow project (exit code {process.ExitCode}).");
     }
 }
+

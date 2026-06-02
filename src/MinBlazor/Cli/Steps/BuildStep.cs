@@ -6,6 +6,7 @@ namespace MinBlazor.Cli.Steps;
 public sealed class BuildStep : IPipelineStep
 {
     public PipelineStep Step => PipelineStep.Build;
+    public string? StartMessage => "Building...";
 
     public Result Execute(PipelineContext context)
     {
@@ -24,3 +25,4 @@ public sealed class BuildStep : IPipelineStep
         return Result.Ok();
     }
 }
+

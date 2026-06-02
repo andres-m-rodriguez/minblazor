@@ -6,6 +6,7 @@ namespace MinBlazor.Cli.Steps;
 public sealed class ServeStep(IOutput output) : IPipelineStep
 {
     public PipelineStep Step => PipelineStep.Serve;
+    public string? StartMessage => null;
 
     public Result Execute(PipelineContext context)
     {
@@ -40,3 +41,4 @@ public sealed class ServeStep(IOutput output) : IPipelineStep
         return Result.Ok();
     }
 }
+

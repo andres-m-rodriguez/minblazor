@@ -11,6 +11,7 @@ public sealed class ScaffoldStep : IPipelineStep
     private const string DependenciesFile = "Dependencies.cs";
 
     public PipelineStep Step => PipelineStep.Scaffold;
+    public string? StartMessage => null;
 
     public Result Execute(PipelineContext context)
     {
@@ -170,4 +171,5 @@ public sealed class ScaffoldStep : IPipelineStep
         return null;
     }
 }
+
 

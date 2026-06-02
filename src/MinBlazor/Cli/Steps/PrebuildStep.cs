@@ -8,6 +8,7 @@ namespace MinBlazor.Cli.Steps;
 public sealed class PrebuildStep(IOutput output) : IPipelineStep
 {
     public PipelineStep Step => PipelineStep.Prebuild;
+    public string? StartMessage => null;
 
     public Result Execute(PipelineContext context)
     {
@@ -84,5 +85,6 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
         return null;
     }
 }
+
 
 

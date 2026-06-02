@@ -8,6 +8,7 @@ namespace MinBlazor.Cli.Steps;
 public sealed class CompileStep : IPipelineStep
 {
     public PipelineStep Step => PipelineStep.Compile;
+    public string? StartMessage => "Compiling...";
 
     public Result Execute(PipelineContext context)
     {
@@ -29,3 +30,4 @@ public sealed class CompileStep : IPipelineStep
         return Result.Ok();
     }
 }
+

@@ -20,6 +20,9 @@ public sealed class PipelineRunner(IOutput output)
     {
         foreach (var step in _steps.Where(s => s.Step <= target))
         {
+            if (step.StartMessage is not null)
+                output.Info(step.StartMessage);
+
             var result = step.Execute(context);
             if (!result.IsSuccess)
                 return result;
