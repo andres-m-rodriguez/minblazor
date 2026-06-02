@@ -16,6 +16,9 @@ public static class ArgumentParser
             "--version" or "-v" => Ok(new CliCommand.ShowVersion()),
             "run" => ParseRun(args),
             "build" => ParseBuild(args),
+            "restore" => ParseRestore(args),
+            "clean" => ParseClean(args),
+            "list" => Ok(new CliCommand.List(new ListOptions())),
             var other => Fail($"Unknown command '{other}'. Try 'minblazor --help'."),
         };
     }
@@ -120,6 +123,37 @@ public static class ArgumentParser
             return Fail($"File not found: {razorPath}");
 
         return Ok(new CliCommand.Build(new BuildOptions { RazorFile = razorPath, Clean = clean, NoShadow = noShadow }));
+    }
+
+    private static Result<CliCommand> ParseRestore(string[] args)
+    {
+        string? file = null;
+        bool noShadow = false;
+        for (int i = 1; i < args.Length; i++)
+        {
+            var arg = args[i];
+            if (arg == "--no-shadow") { noShadow = true; continue; }
+            if (arg.StartsWith('-')) return Fail($"Unknown option '{arg}'.");
+            if (file is not null) return Fail("Only one .razor file at a time.");
+            file = arg;
+        }
+        if (file is null) return Fail("No .razor file given. Usage: minblazor restore Index.razor");
+        var razorPath = Path.GetFullPath(file);
+        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)) return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        if (!File.Exists(razorPath)) return Fail($"File not found: {razorPath}");
+        return Ok(new CliCommand.Restore(new RestoreOptions { RazorFile = razorPath, NoShadow = noShadow }));
+    }
+
+    private static Result<CliCommand> ParseClean(string[] args)
+    {
+        string? file = args.Skip(1).FirstOrDefault(a => !a.StartsWith('-'));
+        string? razorPath = null;
+        if (file is not null)
+        {
+            razorPath = Path.GetFullPath(file);
+            if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)) return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        }
+        return Ok(new CliCommand.Clean(new CleanOptions { RazorFile = razorPath }));
     }
 
     private static Result<CliCommand> Ok(CliCommand command) => Result<CliCommand>.Ok(command);

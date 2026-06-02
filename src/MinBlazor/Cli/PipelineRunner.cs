@@ -11,6 +11,7 @@ public sealed class PipelineRunner(IOutput output)
         new ShadowStep(),
         new CompileStep(),
         new ScaffoldStep(),
+        new RestoreStep(),
         new BuildStep(),
         new ServeStep(output),
     ];
@@ -25,7 +26,6 @@ public sealed class PipelineRunner(IOutput output)
             var countBefore = context.Diagnostics.Items.Count;
             var result = step.Execute(context);
 
-            // Print any diagnostics this step added, immediately after it runs
             foreach (var d in context.Diagnostics.Items.Skip(countBefore)
                 .Where(d => d.Severity != DiagnosticSeverity.Info))
                 output.Info(d.Message);

@@ -9,18 +9,70 @@ namespace MinBlazor.Services;
 
 public sealed class InProcessBuilder
 {
-    public Result<string> Build(
+    public Result WriteAndRestore(
         string scaffoldDir,
         Compilation compilation,
         IReadOnlyDictionary<string, string> buildProperties,
         string blazorPackageVersion,
         IDiagnostics diagnostics)
     {
+        var root = CreateProject(scaffoldDir, compilation, buildProperties, blazorPackageVersion);
+        root.Save();
+
+        var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
+        var instance = new ProjectInstance(root);
+        var parameters = new BuildParameters(projectCollection)
+        {
+            Loggers = [new DiagnosticsLogger(diagnostics)],
+            EnableNodeReuse = false,
+        };
+
+        var result = BuildManager.DefaultBuildManager.Build(
+            parameters,
+            new BuildRequestData(instance, ["Restore"]));
+
+        return result.OverallResult == BuildResultCode.Failure
+            ? Result.Fail("Restore failed (see output above).")
+            : Result.Ok();
+    }
+
+    public Result<string> Build(string scaffoldDir, IDiagnostics diagnostics)
+    {
+        var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
+        var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
+
+        var instance = new ProjectInstance(csprojPath,
+            new Dictionary<string, string> { ["Configuration"] = "Debug" },
+            null, projectCollection);
+
+        var parameters = new BuildParameters(projectCollection)
+        {
+            Loggers = [new DiagnosticsLogger(diagnostics)],
+            EnableNodeReuse = false,
+        };
+
+        var result = BuildManager.DefaultBuildManager.Build(
+            parameters,
+            new BuildRequestData(instance, ["Build"]));
+
+        if (result.OverallResult == BuildResultCode.Failure)
+            return Result<string>.Fail("MSBuild failed (see output above).");
+
+        var manifest = FindManifest(scaffoldDir);
+        return manifest is null
+            ? Result<string>.Fail("Build succeeded but no static web assets manifest was found.")
+            : Result<string>.Ok(manifest);
+    }
+
+    private static ProjectRootElement CreateProject(
+        string scaffoldDir,
+        Compilation compilation,
+        IReadOnlyDictionary<string, string> buildProperties,
+        string blazorPackageVersion)
+    {
         var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
         var root = ProjectRootElement.Create(projectCollection);
-
-        var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
-        root.FullPath = csprojPath;
+        root.FullPath = Path.Combine(scaffoldDir, "App.csproj");
         root.Sdk = "Microsoft.NET.Sdk.BlazorWebAssembly";
 
         var props = root.AddPropertyGroup();
@@ -40,40 +92,7 @@ public sealed class InProcessBuilder
             pkgs.AddItem("PackageReference", pkg.Name,
                 pkg.Version is null ? [] : [new KeyValuePair<string, string>("Version", pkg.Version)]);
 
-        // Write project file so SDK resolution can find package targets
-        root.Save();
-
-        var logger = new DiagnosticsLogger(diagnostics);
-        var parameters = new BuildParameters(projectCollection)
-        {
-            Loggers = [logger],
-            EnableNodeReuse = false,
-        };
-
-        // Restore first — packages must be on disk before the WASM SDK targets can be imported
-        var restore = BuildManager.DefaultBuildManager.Build(
-            parameters,
-            new BuildRequestData(new ProjectInstance(root), ["Restore"]));
-
-        if (restore.OverallResult == BuildResultCode.Failure)
-            return Result<string>.Fail("Restore failed (see output above).");
-
-        // Re-evaluate the project so the restored package targets are imported
-        var builtInstance = new ProjectInstance(csprojPath,
-            new Dictionary<string, string> { ["Configuration"] = "Debug" },
-            null, projectCollection);
-
-        var build = BuildManager.DefaultBuildManager.Build(
-            parameters,
-            new BuildRequestData(builtInstance, ["Build"]));
-
-        if (build.OverallResult == BuildResultCode.Failure)
-            return Result<string>.Fail("MSBuild failed (see output above).");
-
-        var manifest = FindManifest(scaffoldDir);
-        return manifest is null
-            ? Result<string>.Fail("Build succeeded but no static web assets manifest was found.")
-            : Result<string>.Ok(manifest);
+        return root;
     }
 
     private static string? FindManifest(string scaffoldDir)

@@ -10,17 +10,7 @@ public sealed class BuildStep : IPipelineStep
 
     public Result Execute(PipelineContext context)
     {
-        var buildProperties =
-            context.Script?.Outputs.Properties ?? new Dictionary<string, string>();
-
-        var built = new InProcessBuilder().Build(
-            context.ScaffoldDir!,
-            context.Compilation!,
-            buildProperties,
-            AppInfo.BlazorPackageVersion,
-            context.Diagnostics
-        );
-
+        var built = new InProcessBuilder().Build(context.ScaffoldDir!, context.Diagnostics);
         if (!built.IsSuccess)
             return Result.Fail(built.Error!);
 
