@@ -68,7 +68,23 @@ public sealed class PrebuildStep(IOutput output) : IPipelineStep
 
         context.ComponentTable = table;
         context.Script = script;
+
+        WriteVirtualComponentCache(sourceDir, script);
+
         return Result.Ok();
+    }
+
+    private static void WriteVirtualComponentCache(string sourceDir, BuildScript? script)
+    {
+        var cacheDir = Path.Combine(sourceDir, "_minblazor");
+        if (!Directory.Exists(cacheDir)) return;
+
+        var names = script?.Outputs.Components.Select(c => c.Name).ToArray() ?? [];
+        var json = System.Text.Json.JsonSerializer.Serialize(names);
+        var path = Path.Combine(cacheDir, ".virtual-components.json");
+
+        if (!File.Exists(path) || File.ReadAllText(path) != json)
+            File.WriteAllText(path, json);
     }
 
     private static string? FindBuildOutput(string sourceDir)
