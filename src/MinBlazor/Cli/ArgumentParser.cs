@@ -66,13 +66,17 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(new CliCommand.Run(new RunOptions
-        {
-            RazorFile = razorPath,
-            Port = port,
-            OpenBrowser = open,
-            Clean = clean,
-        }));
+        return Ok(
+            new CliCommand.Run(
+                new RunOptions
+                {
+                    RazorFile = razorPath,
+                    Port = port,
+                    OpenBrowser = open,
+                    Clean = clean,
+                }
+            )
+        );
     }
 
     private static Result<CliCommand> ParseBuild(string[] args)

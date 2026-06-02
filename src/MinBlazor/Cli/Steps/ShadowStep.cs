@@ -7,6 +7,7 @@ namespace MinBlazor.Cli.Steps;
 
 public sealed class ShadowStep : IPipelineStep
 {
+    private const string ShadowDir = ".minblazor";
     private const string ShadowFileName = "minblazor.csproj";
 
     public PipelineStep Step => PipelineStep.Shadow;
@@ -14,7 +15,8 @@ public sealed class ShadowStep : IPipelineStep
     public Result Execute(PipelineContext context)
     {
         var sourceDir = Path.GetDirectoryName(context.RazorPath)!;
-        var shadowPath = Path.Combine(sourceDir, ShadowFileName);
+        var shadowFolder = Path.Combine(sourceDir, ShadowDir);
+        var shadowPath = Path.Combine(shadowFolder, ShadowFileName);
 
         var entryDoc = new RazorParser(File.ReadAllText(context.RazorPath)).Parse();
         var packages = new Scanner().Packages(entryDoc);
@@ -26,9 +28,19 @@ public sealed class ShadowStep : IPipelineStep
         if (!changed)
             return Result.Ok();
 
+        Directory.CreateDirectory(shadowFolder);
         File.WriteAllText(shadowPath, content.ToString());
 
-        return Restore(sourceDir, context.Diagnostics);
+        WriteGitignore(shadowFolder);
+
+        return Restore(shadowFolder, context.Diagnostics);
+    }
+
+    private static void WriteGitignore(string shadowFolder)
+    {
+        var gitignorePath = Path.Combine(shadowFolder, ".gitignore");
+        if (!File.Exists(gitignorePath))
+            File.WriteAllText(gitignorePath, "obj/\nbin/\n");
     }
 
     private static Result Restore(string workingDir, IDiagnostics diagnostics)
