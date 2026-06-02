@@ -29,9 +29,11 @@ public sealed class ShadowStep : IPipelineStep
 
         var dllPaths = GetMinBlazorDlls();
         var hasBuildCs = File.Exists(Path.Combine(sourceDir, BuildFile));
+        var sourceDirectories = context.Script?.Outputs.SourceDirectories
+            ?? (IReadOnlyList<string>)[];
 
         var (csproj, imports) = ScaffoldGenerator.GenerateShadowProject(
-            AppInfo.BlazorPackageVersion, packages, dllPaths, hasBuildCs);
+            AppInfo.BlazorPackageVersion, packages, dllPaths, hasBuildCs, sourceDirectories);
 
         var csprojStr = csproj.ToString();
         var importsStr = imports.ToString();

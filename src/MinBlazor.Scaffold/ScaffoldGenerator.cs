@@ -12,7 +12,8 @@ public sealed class ScaffoldGenerator
         string blazorPackageVersion,
         IEnumerable<PackageReference> packages,
         IReadOnlyList<string> dllRefs,
-        bool hasBuildCs)
+        bool hasBuildCs,
+        IReadOnlyList<string> sourceDirectories)
     {
         var pkgList = packages.ToList();
 
@@ -30,6 +31,9 @@ public sealed class ScaffoldGenerator
             ? "\n    <Compile Include=\"../Build.cs\" />"
             : "";
 
+        var sourceDirItems = string.Concat(sourceDirectories.Select(dir =>
+            $"\n    <Compile Include=\"{dir.Replace('\\', '/')}/**/*.cs\" />"));
+
         var csproj = $"""
             <Project Sdk="Microsoft.NET.Sdk.Razor">
               <PropertyGroup>
@@ -41,7 +45,7 @@ public sealed class ScaffoldGenerator
                 <Nullable>enable</Nullable>
               </PropertyGroup>
               <ItemGroup>
-                <Content Include="../**/*.razor" />{buildCsItem}
+                <Content Include="../**/*.razor" />{buildCsItem}{sourceDirItems}
               </ItemGroup>
               <ItemGroup>{dllRefItems}
                 <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{blazorPackageVersion}" />{packageRefs}
@@ -49,11 +53,7 @@ public sealed class ScaffoldGenerator
             </Project>
             """;
 
-        var namespaceUsings = string.Concat(pkgList
-            .Select(p => p.Name)
-            .Select(name => $"@using {name}\n"));
-
-        var imports = $"""
+        var imports = """
             @using System.Net.Http
             @using System.Net.Http.Json
             @using Microsoft.AspNetCore.Components.Forms
@@ -62,7 +62,6 @@ public sealed class ScaffoldGenerator
             @using Microsoft.AspNetCore.Components.WebAssembly.Http
             @using Microsoft.JSInterop
             @using MinBlazorApp
-            {namespaceUsings}
             """;
 
         return (csproj.AsMemory(), imports.AsMemory());
