@@ -6,8 +6,6 @@ public abstract record CliCommand
 
     public sealed record Build(BuildOptions Options) : CliCommand;
 
-    public sealed record Build2(Build2Options Options) : CliCommand;
-
     public sealed record ShowHelp : CliCommand;
 
     public sealed record ShowVersion : CliCommand;
