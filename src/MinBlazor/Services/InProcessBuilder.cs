@@ -40,8 +40,9 @@ public sealed class InProcessBuilder
             pkgs.AddItem("PackageReference", pkg.Name,
                 pkg.Version is null ? [] : [new KeyValuePair<string, string>("Version", pkg.Version)]);
 
-        root.Save(); // write to scaffold temp dir so SDK resolution works
-        var instance = new ProjectInstance(root);
+        // Write project file so SDK resolution can find package targets
+        root.Save();
+
         var logger = new DiagnosticsLogger(diagnostics);
         var parameters = new BuildParameters(projectCollection)
         {
@@ -49,11 +50,24 @@ public sealed class InProcessBuilder
             EnableNodeReuse = false,
         };
 
-        var result = BuildManager.DefaultBuildManager.Build(
+        // Restore first — packages must be on disk before the WASM SDK targets can be imported
+        var restore = BuildManager.DefaultBuildManager.Build(
             parameters,
-            new BuildRequestData(instance, ["Restore", "Build"]));
+            new BuildRequestData(new ProjectInstance(root), ["Restore"]));
 
-        if (result.OverallResult == BuildResultCode.Failure)
+        if (restore.OverallResult == BuildResultCode.Failure)
+            return Result<string>.Fail("Restore failed (see output above).");
+
+        // Re-evaluate the project so the restored package targets are imported
+        var builtInstance = new ProjectInstance(csprojPath,
+            new Dictionary<string, string> { ["Configuration"] = "Debug" },
+            null, projectCollection);
+
+        var build = BuildManager.DefaultBuildManager.Build(
+            parameters,
+            new BuildRequestData(builtInstance, ["Build"]));
+
+        if (build.OverallResult == BuildResultCode.Failure)
             return Result<string>.Fail("MSBuild failed (see output above).");
 
         var manifest = FindManifest(scaffoldDir);
@@ -87,5 +101,3 @@ public sealed class InProcessBuilder
         public void Shutdown() { }
     }
 }
-
-
