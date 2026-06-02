@@ -10,11 +10,6 @@ public sealed class BuildCommand(IOutput output)
 
         var context = new PipelineContext(options.RazorFile, clean: options.Clean, noShadow: options.NoShadow);
         var result = new PipelineRunner(output).RunUpTo(PipelineStep.Build, context);
-
-        foreach (var d in context.Diagnostics.Items.Where(d =>
-            d.Severity != MinBlazor.Core.DiagnosticSeverity.Info))
-            output.Info(d.Message);
-
         if (!result.IsSuccess)
         {
             output.Error(result.Error!);
@@ -25,4 +20,5 @@ public sealed class BuildCommand(IOutput output)
         return 0;
     }
 }
+
 

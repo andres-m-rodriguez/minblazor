@@ -1,6 +1,5 @@
 using MinBlazor.Core;
 using MinBlazor.Cli.Steps;
-using MinBlazor.Parser;
 
 namespace MinBlazor.Cli;
 
@@ -23,7 +22,14 @@ public sealed class PipelineRunner(IOutput output)
             if (step.StartMessage is not null)
                 output.Info(step.StartMessage);
 
+            var countBefore = context.Diagnostics.Items.Count;
             var result = step.Execute(context);
+
+            // Print any diagnostics this step added, immediately after it runs
+            foreach (var d in context.Diagnostics.Items.Skip(countBefore)
+                .Where(d => d.Severity != DiagnosticSeverity.Info))
+                output.Info(d.Message);
+
             if (!result.IsSuccess)
                 return result;
         }
@@ -31,4 +37,3 @@ public sealed class PipelineRunner(IOutput output)
         return Result.Ok();
     }
 }
-
