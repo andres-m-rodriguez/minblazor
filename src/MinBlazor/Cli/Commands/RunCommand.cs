@@ -6,8 +6,6 @@ public sealed class RunCommand(IOutput output)
 {
     public int Execute(RunOptions options)
     {
-        output.Info($"running {Path.GetFileName(options.RazorFile)} on http://localhost:{options.Port}");
-
         var context = new PipelineContext(
             options.RazorFile,
             clean: options.Clean,

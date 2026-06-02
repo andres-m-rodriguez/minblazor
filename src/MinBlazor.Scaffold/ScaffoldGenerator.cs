@@ -8,10 +8,65 @@ public sealed class ScaffoldGenerator
 {
     private readonly Emitter _emitter = new();
 
-    public static ReadOnlyMemory<char> GenerateShadowProject(
+    public static (ReadOnlyMemory<char> Csproj, ReadOnlyMemory<char> Imports) GenerateShadowProject(
         string blazorPackageVersion,
-        IEnumerable<PackageReference> packages) =>
-        Templates.Csproj(blazorPackageVersion, packages, new Dictionary<string, string>()).AsMemory();
+        IEnumerable<PackageReference> packages,
+        IReadOnlyList<string> dllRefs,
+        bool hasBuildCs)
+    {
+        var pkgList = packages.ToList();
+
+        var packageRefs = string.Concat(pkgList.Select(p =>
+            p.Version is null
+                ? $"\n    <PackageReference Include=\"{p.Name}\" />"
+                : $"\n    <PackageReference Include=\"{p.Name}\" Version=\"{p.Version}\" />"));
+
+        var dllRefItems = string.Concat(dllRefs.Select(dll =>
+            $"\n    <Reference Include=\"{Path.GetFileNameWithoutExtension(dll)}\">" +
+            $"\n      <HintPath>refs/{Path.GetFileName(dll)}</HintPath>" +
+            $"\n    </Reference>"));
+
+        var buildCsItem = hasBuildCs
+            ? "\n    <Compile Include=\"../Build.cs\" />"
+            : "";
+
+        var csproj = $"""
+            <Project Sdk="Microsoft.NET.Sdk.Razor">
+              <PropertyGroup>
+                <TargetFramework>net10.0</TargetFramework>
+                <RootNamespace>MinBlazorApp</RootNamespace>
+                <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+                <BaseOutputPath>bin\</BaseOutputPath>
+                <ImplicitUsings>enable</ImplicitUsings>
+                <Nullable>enable</Nullable>
+              </PropertyGroup>
+              <ItemGroup>
+                <Content Include="../**/*.razor" />{buildCsItem}
+              </ItemGroup>
+              <ItemGroup>{dllRefItems}
+                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{blazorPackageVersion}" />{packageRefs}
+              </ItemGroup>
+            </Project>
+            """;
+
+        var namespaceUsings = string.Concat(pkgList
+            .Select(p => p.Name)
+            .Select(name => $"@using {name}\n"));
+
+        var imports = $"""
+            @using System.Net.Http
+            @using System.Net.Http.Json
+            @using Microsoft.AspNetCore.Components.Forms
+            @using Microsoft.AspNetCore.Components.Routing
+            @using Microsoft.AspNetCore.Components.Web
+            @using Microsoft.AspNetCore.Components.WebAssembly.Http
+            @using Microsoft.JSInterop
+            @using MinBlazorApp
+            {namespaceUsings}
+            """;
+
+        return (csproj.AsMemory(), imports.AsMemory());
+    }
 
     public ScaffoldContent Generate(
         Compilation compilation,
