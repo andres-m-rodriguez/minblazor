@@ -9,18 +9,25 @@ internal static class ScaffoldTemplates
 
     public const string HeadPlaceholder = "<!--minblazor:head-->";
 
-    public static string Csproj(string packageVersion, IEnumerable<PackageReference> packages, IReadOnlyDictionary<string, string> properties)
+    public static string Csproj(
+        string packageVersion,
+        IEnumerable<PackageReference> packages,
+        IReadOnlyDictionary<string, string> properties
+    )
     {
         var userPackages = string.Concat(
             packages.Select(package =>
                 package.Version is null
                     ? $"\n    <PackageReference Include=\"{package.Name}\" />"
-                    : $"\n    <PackageReference Include=\"{package.Name}\" Version=\"{package.Version}\" />"));
+                    : $"\n    <PackageReference Include=\"{package.Name}\" Version=\"{package.Version}\" />"
+            )
+        );
 
         var userProperties = string.Concat(
             properties
                 .OrderBy(property => property.Key, StringComparer.Ordinal)
-                .Select(property => $"\n    <{property.Key}>{property.Value}</{property.Key}>"));
+                .Select(property => $"\n    <{property.Key}>{property.Value}</{property.Key}>")
+        );
 
         return $"""
             <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
@@ -46,7 +53,10 @@ internal static class ScaffoldTemplates
         var consts = string.Concat(
             options
                 .OrderBy(option => option.Key, StringComparer.Ordinal)
-                .Select(option => $"    public const string {option.Key} = {SymbolDisplay.FormatLiteral(option.Value, true)};\n"));
+                .Select(option =>
+                    $"    public const string {option.Key} = {SymbolDisplay.FormatLiteral(option.Value, true)};\n"
+                )
+        );
 
         return $"namespace {RootNamespace};\n\npublic static class BuildOptions\n{{\n{consts}}}\n";
     }

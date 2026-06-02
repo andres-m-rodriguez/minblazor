@@ -1,4 +1,3 @@
-using MinBlazor.Core;
 using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -6,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using MinBlazor.Build;
 using MinBlazor.Build.Models;
+using MinBlazor.Core;
 using MinBlazor.Models;
 using MinBlazor.Parser;
 
@@ -95,4 +95,3 @@ public sealed class BuildScriptLoader(string sourceDir, string outputDir, Action
         return builder.ToString();
     }
 }
-

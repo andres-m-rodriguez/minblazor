@@ -10,9 +10,17 @@ public sealed class Scaffold
 {
     private const string DependenciesFile = "Dependencies.cs";
 
-    private static readonly IReadOnlyDictionary<string, string> EmptyProperties = new Dictionary<string, string>();
+    private static readonly IReadOnlyDictionary<string, string> EmptyProperties =
+        new Dictionary<string, string>();
 
-    public void Write(string targetDir, string sourceDir, Compilation compilation, int port, BuildOutputs? build, IReadOnlyCollection<string> usings)
+    public void Write(
+        string targetDir,
+        string sourceDir,
+        Compilation compilation,
+        int port,
+        BuildOutputs? build,
+        IReadOnlyCollection<string> usings
+    )
     {
         Directory.CreateDirectory(targetDir);
         Directory.CreateDirectory(Path.Combine(targetDir, "Properties"));
@@ -28,8 +36,18 @@ public sealed class Scaffold
             WriteComponent(targetDir, emitter, component, hostTags, produced);
 
         foreach (var cs in Directory.EnumerateFiles(sourceDir, "*.cs"))
-            if (!string.Equals(Path.GetFileName(cs), BuildScript.FileName, StringComparison.OrdinalIgnoreCase))
-                Produce(produced, Path.Combine(targetDir, Path.GetFileName(cs)), File.ReadAllText(cs));
+            if (
+                !string.Equals(
+                    Path.GetFileName(cs),
+                    BuildScript.FileName,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+                Produce(
+                    produced,
+                    Path.Combine(targetDir, Path.GetFileName(cs)),
+                    File.ReadAllText(cs)
+                );
 
         if (build is not null)
             WriteBuildOutputs(targetDir, produced, hostTags, build);
@@ -39,18 +57,43 @@ public sealed class Scaffold
         var properties = build?.Properties ?? EmptyProperties;
 
         Produce(produced, Path.Combine(targetDir, ".gitignore"), "*\n");
-        Produce(produced, Path.Combine(targetDir, "App.csproj"), ScaffoldTemplates.Csproj(AppInfo.BlazorPackageVersion, packages, properties));
-        Produce(produced, Path.Combine(targetDir, "Program.cs"), ScaffoldTemplates.Program(compilation.Entry.Name, hasDependencies));
-        Produce(produced, Path.Combine(targetDir, "_Imports.razor"), ScaffoldTemplates.Imports(usings));
-        Produce(produced, Path.Combine(targetDir, "Properties", "launchSettings.json"), ScaffoldTemplates.LaunchSettings(port));
+        Produce(
+            produced,
+            Path.Combine(targetDir, "App.csproj"),
+            ScaffoldTemplates.Csproj(AppInfo.BlazorPackageVersion, packages, properties)
+        );
+        Produce(
+            produced,
+            Path.Combine(targetDir, "Program.cs"),
+            ScaffoldTemplates.Program(compilation.Entry.Name, hasDependencies)
+        );
+        Produce(
+            produced,
+            Path.Combine(targetDir, "_Imports.razor"),
+            ScaffoldTemplates.Imports(usings)
+        );
+        Produce(
+            produced,
+            Path.Combine(targetDir, "Properties", "launchSettings.json"),
+            ScaffoldTemplates.LaunchSettings(port)
+        );
 
         var head = string.Join('\n', hostTags.OrderBy(tag => tag, StringComparer.Ordinal));
-        Produce(produced, Path.Combine(targetDir, "wwwroot", "index.html"), ScaffoldTemplates.IndexHtml.Replace(ScaffoldTemplates.HeadPlaceholder, head));
+        Produce(
+            produced,
+            Path.Combine(targetDir, "wwwroot", "index.html"),
+            ScaffoldTemplates.IndexHtml.Replace(ScaffoldTemplates.HeadPlaceholder, head)
+        );
 
         DeleteOrphans(targetDir, produced);
     }
 
-    private static void WriteBuildOutputs(string targetDir, HashSet<string> produced, List<string> hostTags, BuildOutputs build)
+    private static void WriteBuildOutputs(
+        string targetDir,
+        HashSet<string> produced,
+        List<string> hostTags,
+        BuildOutputs build
+    )
     {
         hostTags.AddRange(build.HeadTags);
 
@@ -58,7 +101,11 @@ public sealed class Scaffold
             Produce(produced, Path.Combine(targetDir, source.FileName), source.Code);
 
         if (build.Options.Count > 0)
-            Produce(produced, Path.Combine(targetDir, "BuildOptions.cs"), ScaffoldTemplates.BuildOptions(build.Options));
+            Produce(
+                produced,
+                Path.Combine(targetDir, "BuildOptions.cs"),
+                ScaffoldTemplates.BuildOptions(build.Options)
+            );
 
         foreach (var asset in build.Assets)
             WriteAsset(targetDir, asset);
@@ -66,17 +113,30 @@ public sealed class Scaffold
 
     private static void WriteAsset(string targetDir, BuildAsset asset)
     {
-        var path = Path.Combine(targetDir, "wwwroot", asset.Path.Replace('/', Path.DirectorySeparatorChar));
+        var path = Path.Combine(
+            targetDir,
+            "wwwroot",
+            asset.Path.Replace('/', Path.DirectorySeparatorChar)
+        );
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
 
         if (!File.Exists(path) || !File.ReadAllBytes(path).AsSpan().SequenceEqual(asset.Contents))
             File.WriteAllBytes(path, asset.Contents);
     }
 
-
-    private static void WriteComponent(string targetDir, Emitter emitter, CompiledComponent component, List<string> hostTags, HashSet<string> produced)
+    private static void WriteComponent(
+        string targetDir,
+        Emitter emitter,
+        CompiledComponent component,
+        List<string> hostTags,
+        HashSet<string> produced
+    )
     {
-        Produce(produced, Path.Combine(targetDir, $"{component.Name}.razor"), emitter.Emit(component.Document));
+        Produce(
+            produced,
+            Path.Combine(targetDir, $"{component.Name}.razor"),
+            emitter.Emit(component.Document)
+        );
         hostTags.AddRange(emitter.EmitHostTags(component.HostTags));
     }
 
@@ -99,5 +159,3 @@ public sealed class Scaffold
                 File.Delete(file);
     }
 }
-
-

@@ -19,8 +19,16 @@ public sealed class Builder
             },
         };
 
-        process.OutputDataReceived += (_, e) => { if (e.Data is not null) diagnostics?.Info(e.Data); };
-        process.ErrorDataReceived += (_, e) => { if (e.Data is not null) diagnostics?.Info(e.Data); };
+        process.OutputDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+                diagnostics?.Info(e.Data);
+        };
+        process.ErrorDataReceived += (_, e) =>
+        {
+            if (e.Data is not null)
+                diagnostics?.Info(e.Data);
+        };
 
         process.Start();
         process.BeginOutputReadLine();

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using MinBlazor.Core;
 using MinBlazor.Parser;
+using MinBlazor.Scaffold;
 
 namespace MinBlazor.Cli.Steps;
 
@@ -18,35 +19,16 @@ public sealed class ShadowStep : IPipelineStep
         var entryDoc = new RazorParser(File.ReadAllText(context.RazorPath)).Parse();
         var packages = new Scanner().Packages(entryDoc);
 
-        var content = Generate(packages);
+        var content = ScaffoldGenerator.GenerateShadowProject(AppInfo.BlazorPackageVersion, packages);
 
-        var changed = !File.Exists(shadowPath) || File.ReadAllText(shadowPath) != content;
+        var changed = !File.Exists(shadowPath) ||
+                      File.ReadAllText(shadowPath) != content.ToString();
         if (!changed)
             return Result.Ok();
 
-        File.WriteAllText(shadowPath, content);
+        File.WriteAllText(shadowPath, content.ToString());
 
         return Restore(sourceDir, context.Diagnostics);
-    }
-
-    private static string Generate(IReadOnlyList<PackageReference> packages)
-    {
-        var packageRefs = string.Concat(packages.Select(p =>
-            p.Version is null
-                ? $"\n    <PackageReference Include=\"{p.Name}\" />"
-                : $"\n    <PackageReference Include=\"{p.Name}\" Version=\"{p.Version}\" />"));
-
-        return $"""
-            <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-              <PropertyGroup>
-                <TargetFramework>net10.0</TargetFramework>
-                <RootNamespace>MinBlazorApp</RootNamespace>
-              </PropertyGroup>
-              <ItemGroup>
-                <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="{AppInfo.BlazorPackageVersion}" />{packageRefs}
-              </ItemGroup>
-            </Project>
-            """;
     }
 
     private static Result Restore(string workingDir, IDiagnostics diagnostics)

@@ -8,6 +8,11 @@ public sealed class ScaffoldGenerator
 {
     private readonly Emitter _emitter = new();
 
+    public static ReadOnlyMemory<char> GenerateShadowProject(
+        string blazorPackageVersion,
+        IEnumerable<PackageReference> packages) =>
+        Templates.Csproj(blazorPackageVersion, packages, new Dictionary<string, string>()).AsMemory();
+
     public ScaffoldContent Generate(
         Compilation compilation,
         BuildOutputs? build,
