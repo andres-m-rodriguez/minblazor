@@ -42,6 +42,12 @@ internal sealed class Lexer
             return hostToken;
         }
 
+        if (TryParseStyleBlock(src, _cursor, out var styleToken))
+        {
+            _cursor = styleToken.End;
+            return styleToken;
+        }
+
         if (TryParseComponent(src, _cursor, out var componentToken))
         {
             _cursor = componentToken.End;
@@ -88,11 +94,39 @@ internal sealed class Lexer
             i < src.Length
             && !TryParseDirective(src, i, out _)
             && !TryParseHostTag(src, i, out _)
+            && !TryParseStyleBlock(src, i, out _)
             && !TryParseComponent(src, i, out _)
         )
             i++;
 
         return new Token(NodeKind.Text, pos, i);
+    }
+
+    private static bool TryParseStyleBlock(ReadOnlySpan<char> src, int pos, out Token styleToken)
+    {
+        styleToken = default;
+
+        if (pos + 6 > src.Length)
+            return false;
+
+        if (!src.Slice(pos, 6).SequenceEqual("<style".AsSpan()))
+            return false;
+
+        // must be followed by '>' or whitespace — not a letter (guards against <stylesheet> etc.)
+        if (pos + 6 < src.Length && char.IsAsciiLetter(src[pos + 6]))
+            return false;
+
+        var close = "</style>".AsSpan();
+        for (int i = pos + 6; i <= src.Length - close.Length; i++)
+        {
+            if (src[i] == '<' && src.Slice(i, close.Length).SequenceEqual(close))
+            {
+                styleToken = new Token(NodeKind.StyleBlock, pos, i + close.Length);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool TryParseDirective(ReadOnlySpan<char> src, int pos, out Token directiveToken)

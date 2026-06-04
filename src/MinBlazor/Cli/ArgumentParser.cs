@@ -20,6 +20,8 @@ public static class ArgumentParser
             "clean" => ParseClean(args),
             "list" => Ok(new CliCommand.List(new ListOptions())),
             "publish" => ParsePublish(args),
+            var other when other.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)
+                => ParseRun(["run", ..args]),
             var other => Fail($"Unknown command '{other}'. Try 'minblazor --help'."),
         };
     }

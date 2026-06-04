@@ -14,7 +14,8 @@ public sealed class ServeStep(IOutput output) : IPipelineStep
         if (!assets.IsSuccess)
             return Result.Fail(assets.Error!);
 
-        using var server = new StaticServer(assets.Value!, context.Port);
+        using var broadcaster = new ReloadBroadcaster();
+        using var server = new StaticServer(assets.Value!, context.Port, broadcaster);
 
         Console.CancelKeyPress += (_, e) =>
         {
