@@ -34,7 +34,7 @@ Three files, no `.csproj`:
 }
 ```
 
-**`Dependencies.cs`**
+**`Dependencies.cs`** haven't added support via LSP but it works cuz ¯\_(ツ)_/¯
 ```csharp
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
