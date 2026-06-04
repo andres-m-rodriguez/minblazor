@@ -17,7 +17,7 @@ public static class RazorDiff
         if (NodesEqual(oldStyle, newStyle))
             return new RazorChange.None();
 
-        var css = string.Concat(newStyle.Select(n => ExtractCss(n.Text)));
+        var css = string.Concat(newStyle.OfType<StyleBlockNode>().Select(n => n.Content.Span.Trim().ToString()));
         return new RazorChange.CssOnly(css);
     }
 
@@ -28,15 +28,5 @@ public static class RazorDiff
             if (a[i].Kind != b[i].Kind || !a[i].Text.Span.SequenceEqual(b[i].Text.Span))
                 return false;
         return true;
-    }
-
-    private static string ExtractCss(ReadOnlyMemory<char> styleBlock)
-    {
-        var span = styleBlock.Span;
-        var openEnd = span.IndexOf('>');
-        if (openEnd < 0) return string.Empty;
-        var closeStart = span.LastIndexOf('<');
-        if (closeStart <= openEnd) return string.Empty;
-        return span.Slice(openEnd + 1, closeStart - openEnd - 1).Trim().ToString();
     }
 }
