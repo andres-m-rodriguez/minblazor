@@ -19,6 +19,7 @@ public static class ArgumentParser
             "restore" => ParseRestore(args),
             "clean" => ParseClean(args),
             "list" => Ok(new CliCommand.List(new ListOptions())),
+            "publish" => ParsePublish(args),
             var other => Fail($"Unknown command '{other}'. Try 'minblazor --help'."),
         };
     }
@@ -74,14 +75,18 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(new CliCommand.Run(new RunOptions
-        {
-            RazorFile = razorPath,
-            Port = port,
-            OpenBrowser = open,
-            Clean = clean,
-            NoShadow = noShadow,
-        }));
+        return Ok(
+            new CliCommand.Run(
+                new RunOptions
+                {
+                    RazorFile = razorPath,
+                    Port = port,
+                    OpenBrowser = open,
+                    Clean = clean,
+                    NoShadow = noShadow,
+                }
+            )
+        );
     }
 
     private static Result<CliCommand> ParseBuild(string[] args)
@@ -122,7 +127,16 @@ public static class ArgumentParser
         if (!File.Exists(razorPath))
             return Fail($"File not found: {razorPath}");
 
-        return Ok(new CliCommand.Build(new BuildOptions { RazorFile = razorPath, Clean = clean, NoShadow = noShadow }));
+        return Ok(
+            new CliCommand.Build(
+                new BuildOptions
+                {
+                    RazorFile = razorPath,
+                    Clean = clean,
+                    NoShadow = noShadow,
+                }
+            )
+        );
     }
 
     private static Result<CliCommand> ParseRestore(string[] args)
@@ -132,16 +146,29 @@ public static class ArgumentParser
         for (int i = 1; i < args.Length; i++)
         {
             var arg = args[i];
-            if (arg == "--no-shadow") { noShadow = true; continue; }
-            if (arg.StartsWith('-')) return Fail($"Unknown option '{arg}'.");
-            if (file is not null) return Fail("Only one .razor file at a time.");
+            if (arg == "--no-shadow")
+            {
+                noShadow = true;
+                continue;
+            }
+            if (arg.StartsWith('-'))
+                return Fail($"Unknown option '{arg}'.");
+            if (file is not null)
+                return Fail("Only one .razor file at a time.");
             file = arg;
         }
-        if (file is null) return Fail("No .razor file given. Usage: minblazor restore Index.razor");
+        if (file is null)
+            return Fail("No .razor file given. Usage: minblazor restore Index.razor");
         var razorPath = Path.GetFullPath(file);
-        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)) return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
-        if (!File.Exists(razorPath)) return Fail($"File not found: {razorPath}");
-        return Ok(new CliCommand.Restore(new RestoreOptions { RazorFile = razorPath, NoShadow = noShadow }));
+        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        if (!File.Exists(razorPath))
+            return Fail($"File not found: {razorPath}");
+        return Ok(
+            new CliCommand.Restore(
+                new RestoreOptions { RazorFile = razorPath, NoShadow = noShadow }
+            )
+        );
     }
 
     private static Result<CliCommand> ParseClean(string[] args)
@@ -151,9 +178,68 @@ public static class ArgumentParser
         if (file is not null)
         {
             razorPath = Path.GetFullPath(file);
-            if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase)) return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+            if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+                return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
         }
         return Ok(new CliCommand.Clean(new CleanOptions { RazorFile = razorPath }));
+    }
+
+    private static Result<CliCommand> ParsePublish(string[] args)
+    {
+        string? file = null;
+        string? outputDir = null;
+        bool clean = false;
+        bool noShadow = false;
+
+        for (int i = 1; i < args.Length; i++)
+        {
+            var arg = args[i];
+            switch (arg)
+            {
+                case "--output" or "-o":
+                    if (i + 1 >= args.Length)
+                        return Fail("--output requires a directory path, e.g. --output ./dist");
+                    outputDir = args[++i];
+                    break;
+
+                case "--clean":
+                    clean = true;
+                    break;
+
+                case "--no-shadow":
+                    noShadow = true;
+                    break;
+
+                default:
+                    if (arg.StartsWith('-'))
+                        return Fail($"Unknown option '{arg}'.");
+                    if (file is not null)
+                        return Fail("Only one .razor file can be published at a time.");
+                    file = arg;
+                    break;
+            }
+        }
+
+        if (file is null)
+            return Fail("No .razor file given. Usage: minblazor publish Index.razor");
+
+        var razorPath = Path.GetFullPath(file);
+        if (!razorPath.EndsWith(".razor", StringComparison.OrdinalIgnoreCase))
+            return Fail($"Expected a .razor file, got: {Path.GetFileName(razorPath)}");
+        if (!File.Exists(razorPath))
+            return Fail($"File not found: {razorPath}");
+
+        return Ok(
+            new CliCommand.Publish(
+                new PublishOptions
+                {
+                    RazorFile = razorPath,
+                    OutputDir = outputDir,
+                    Clean = clean,
+                    NoShadow = noShadow,
+                }
+            )
+        );
     }
 
     private static Result<CliCommand> Ok(CliCommand command) => Result<CliCommand>.Ok(command);

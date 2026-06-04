@@ -31,6 +31,9 @@ public sealed class ShadowStep : IPipelineStep
         var entryDoc = new RazorParser(File.ReadAllText(context.RazorPath)).Parse();
         var packages = new Scanner().Packages(entryDoc);
 
+        if (packages.Count == 0)
+            return Result.Ok();
+
         var dllPaths = GetMinBlazorDlls();
         var hasBuildCs = File.Exists(Path.Combine(sourceDir, BuildFile));
         var sourceDirectories =

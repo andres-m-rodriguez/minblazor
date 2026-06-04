@@ -14,7 +14,8 @@ public sealed class InProcessBuilder
         Compilation compilation,
         IReadOnlyDictionary<string, string> buildProperties,
         string blazorPackageVersion,
-        IDiagnostics diagnostics)
+        IDiagnostics diagnostics
+    )
     {
         var root = CreateProject(scaffoldDir, compilation, buildProperties, blazorPackageVersion);
         root.Save();
@@ -29,7 +30,8 @@ public sealed class InProcessBuilder
 
         var result = BuildManager.DefaultBuildManager.Build(
             parameters,
-            new BuildRequestData(instance, ["Restore"]));
+            new BuildRequestData(instance, ["Restore"])
+        );
 
         return result.OverallResult == BuildResultCode.Failure
             ? Result.Fail("Restore failed (see output above).")
@@ -41,9 +43,12 @@ public sealed class InProcessBuilder
         var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
         var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
 
-        var instance = new ProjectInstance(csprojPath,
+        var instance = new ProjectInstance(
+            csprojPath,
             new Dictionary<string, string> { ["Configuration"] = "Debug" },
-            null, projectCollection);
+            null,
+            projectCollection
+        );
 
         var parameters = new BuildParameters(projectCollection)
         {
@@ -53,7 +58,8 @@ public sealed class InProcessBuilder
 
         var result = BuildManager.DefaultBuildManager.Build(
             parameters,
-            new BuildRequestData(instance, ["Build"]));
+            new BuildRequestData(instance, ["Build"])
+        );
 
         if (result.OverallResult == BuildResultCode.Failure)
             return Result<string>.Fail("MSBuild failed (see output above).");
@@ -64,11 +70,49 @@ public sealed class InProcessBuilder
             : Result<string>.Ok(manifest);
     }
 
+    public Result<string> Publish(string scaffoldDir, string outputDir, IDiagnostics diagnostics)
+    {
+        var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
+        var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
+
+        var instance = new ProjectInstance(
+            csprojPath,
+            new Dictionary<string, string>
+            {
+                ["Configuration"] = "Release",
+                ["PublishDir"] = outputDir,
+                ["PublishTrimmed"] = "true",
+                ["TrimMode"] = "full",
+                ["InvariantGlobalization"] = "true",
+                ["CompressionEnabled"] = "true",
+                ["BlazorEnableLinking"] = "true",
+            },
+            null,
+            projectCollection
+        );
+
+        var parameters = new BuildParameters(projectCollection)
+        {
+            Loggers = [new DiagnosticsLogger(diagnostics)],
+            EnableNodeReuse = false,
+        };
+
+        var result = BuildManager.DefaultBuildManager.Build(
+            parameters,
+            new BuildRequestData(instance, ["Publish"])
+        );
+
+        return result.OverallResult == BuildResultCode.Failure
+            ? Result<string>.Fail("Publish failed (see output above).")
+            : Result<string>.Ok(outputDir);
+    }
+
     private static ProjectRootElement CreateProject(
         string scaffoldDir,
         Compilation compilation,
         IReadOnlyDictionary<string, string> buildProperties,
-        string blazorPackageVersion)
+        string blazorPackageVersion
+    )
     {
         var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
         var root = ProjectRootElement.Create(projectCollection);
@@ -86,11 +130,19 @@ public sealed class InProcessBuilder
             props.AddProperty(k, v);
 
         var pkgs = root.AddItemGroup();
-        pkgs.AddItem("PackageReference", "Microsoft.AspNetCore.Components.WebAssembly",
-            [new KeyValuePair<string, string>("Version", blazorPackageVersion)]);
+        pkgs.AddItem(
+            "PackageReference",
+            "Microsoft.AspNetCore.Components.WebAssembly",
+            [new KeyValuePair<string, string>("Version", blazorPackageVersion)]
+        );
         foreach (var pkg in compilation.Packages)
-            pkgs.AddItem("PackageReference", pkg.Name,
-                pkg.Version is null ? [] : [new KeyValuePair<string, string>("Version", pkg.Version)]);
+            pkgs.AddItem(
+                "PackageReference",
+                pkg.Name,
+                pkg.Version is null
+                    ? []
+                    : [new KeyValuePair<string, string>("Version", pkg.Version)]
+            );
 
         return root;
     }
@@ -98,7 +150,8 @@ public sealed class InProcessBuilder
     private static string? FindManifest(string scaffoldDir)
     {
         var binDir = Path.Combine(scaffoldDir, "bin");
-        if (!Directory.Exists(binDir)) return null;
+        if (!Directory.Exists(binDir))
+            return null;
         return Directory
             .EnumerateFiles(binDir, "*.staticwebassets.runtime.json", SearchOption.AllDirectories)
             .OrderByDescending(File.GetLastWriteTimeUtc)
@@ -112,9 +165,21 @@ public sealed class InProcessBuilder
 
         public void Initialize(IEventSource eventSource)
         {
-            eventSource.MessageRaised += (_, e) => { if (e.Message is not null) diagnostics.Info(e.Message); };
-            eventSource.WarningRaised += (_, e) => { if (e.Message is not null) diagnostics.Warning(e.Message); };
-            eventSource.ErrorRaised += (_, e) => { if (e.Message is not null) diagnostics.Error(e.Message); };
+            eventSource.MessageRaised += (_, e) =>
+            {
+                if (e.Message is not null)
+                    diagnostics.Info(e.Message);
+            };
+            eventSource.WarningRaised += (_, e) =>
+            {
+                if (e.Message is not null)
+                    diagnostics.Warning(e.Message);
+            };
+            eventSource.ErrorRaised += (_, e) =>
+            {
+                if (e.Message is not null)
+                    diagnostics.Error(e.Message);
+            };
         }
 
         public void Shutdown() { }

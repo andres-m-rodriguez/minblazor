@@ -29,5 +29,3 @@ public static class ComponentNameParser
         return sb.ToString();
     }
 }
-
-

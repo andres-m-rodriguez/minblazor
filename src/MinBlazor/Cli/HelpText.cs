@@ -11,12 +11,14 @@ internal static class HelpText
           minblazor run <file.razor> [options]      Build, serve and watch
           minblazor build <file.razor> [options]    Build only
           minblazor restore <file.razor> [options]  Restore packages only
+          minblazor publish <file.razor> [options]  Publish optimized static output
           minblazor clean [file.razor]              Delete build cache
           minblazor list                            Show cached scaffolds
 
         Options:
           -p, --port <n>   Port to serve on (default 5005)   (run only)
               --no-open    Don't open the browser             (run only)
+          -o, --output <dir>  Output directory              (publish only)
               --clean      Delete the build cache first
               --no-shadow  Skip editor shadow project
           -h, --help       Show help
