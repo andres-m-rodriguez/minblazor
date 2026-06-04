@@ -9,6 +9,7 @@ namespace MinBlazor.Services;
 
 public sealed class InProcessBuilder
 {
+    private static readonly Microsoft.Build.Evaluation.ProjectCollection _projectCollection = new();
     public Result WriteAndRestore(
         string scaffoldDir,
         Compilation compilation,
@@ -41,16 +42,15 @@ public sealed class InProcessBuilder
     public Result<string> Build(string scaffoldDir, IDiagnostics diagnostics)
     {
         var csprojPath = Path.Combine(scaffoldDir, "App.csproj");
-        var projectCollection = new Microsoft.Build.Evaluation.ProjectCollection();
 
         var instance = new ProjectInstance(
             csprojPath,
             new Dictionary<string, string> { ["Configuration"] = "Debug" },
             null,
-            projectCollection
+            _projectCollection
         );
 
-        var parameters = new BuildParameters(projectCollection)
+        var parameters = new BuildParameters(_projectCollection)
         {
             Loggers = [new DiagnosticsLogger(diagnostics)],
             EnableNodeReuse = false,

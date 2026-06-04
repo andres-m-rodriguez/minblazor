@@ -1,17 +1,23 @@
 using System.Net;
+using System.Net.WebSockets;
 
 namespace MinBlazor.Services;
 
 public sealed class StaticServer : IDisposable
 {
+    private const string WsPath = "/_minblazor/ws";
+
     private readonly HttpListener _listener = new();
-    private readonly StaticAssets _assets;
+    private StaticAssets _assets;
+    private readonly Lock _assetsLock = new();
+    private readonly ReloadBroadcaster? _broadcaster;
     private readonly ManualResetEventSlim _stopped = new(false);
     private Thread? _thread;
 
-    public StaticServer(StaticAssets assets, int port)
+    public StaticServer(StaticAssets assets, int port, ReloadBroadcaster? broadcaster = null)
     {
         _assets = assets;
+        _broadcaster = broadcaster;
         _listener.Prefixes.Add($"http://localhost:{port}/");
     }
 
@@ -36,6 +42,8 @@ public sealed class StaticServer : IDisposable
 
     public void WaitForExit() => _stopped.Wait();
 
+    public void UpdateAssets(StaticAssets assets) { lock (_assetsLock) _assets = assets; }
+
     private void AcceptLoop()
     {
         while (_listener.IsListening)
@@ -50,23 +58,29 @@ public sealed class StaticServer : IDisposable
                 break;
             }
 
-            Handle(context);
+            var path = Uri.UnescapeDataString(context.Request.Url!.AbsolutePath);
+            if (_broadcaster is not null && context.Request.IsWebSocketRequest && path == WsPath)
+                _ = Task.Run(() => HandleWebSocketAsync(context));
+            else
+                Handle(context, path);
         }
 
         _stopped.Set();
     }
 
-    private void Handle(HttpListenerContext context)
+    private void Handle(HttpListenerContext context, string path)
     {
         try
         {
-            var path = Uri.UnescapeDataString(context.Request.Url!.AbsolutePath);
             if (path is "/" or "")
                 path = "/index.html";
 
-            if (_assets.TryResolve(path, out var file))
+            StaticAssets assets;
+            lock (_assetsLock) assets = _assets;
+
+            if (assets.TryResolve(path, out var file))
                 Send(context.Response, file);
-            else if (!Path.HasExtension(path) && _assets.TryResolve("/index.html", out var index))
+            else if (!Path.HasExtension(path) && assets.TryResolve("/index.html", out var index))
                 Send(context.Response, index);
             else
                 context.Response.StatusCode = 404;
@@ -81,10 +95,39 @@ public sealed class StaticServer : IDisposable
         }
     }
 
+    private async Task HandleWebSocketAsync(HttpListenerContext context)
+    {
+        WebSocket ws;
+        try
+        {
+            var wsContext = await context.AcceptWebSocketAsync(subProtocol: null);
+            ws = wsContext.WebSocket;
+        }
+        catch
+        {
+            return;
+        }
+
+        _broadcaster!.Add(ws);
+        try
+        {
+            var buf = new byte[256];
+            while (ws.State == WebSocketState.Open)
+                await ws.ReceiveAsync(buf, CancellationToken.None);
+        }
+        catch { }
+        finally
+        {
+            _broadcaster.Remove(ws);
+            ws.Dispose();
+        }
+    }
+
     private static void Send(HttpListenerResponse response, string file)
     {
         var bytes = File.ReadAllBytes(file);
-        response.ContentType = MimeTypes.For(Path.GetExtension(file));
+        var ext = Path.GetExtension(file);
+        response.ContentType = MimeTypes.For(ext);
         response.ContentLength64 = bytes.Length;
         response.OutputStream.Write(bytes, 0, bytes.Length);
     }

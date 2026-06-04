@@ -13,30 +13,38 @@ public sealed class ScaffoldGenerator
         IEnumerable<PackageReference> packages,
         IReadOnlyList<string> dllRefs,
         bool hasBuildCs,
-        IReadOnlyList<string> sourceDirectories)
+        IReadOnlyList<string> sourceDirectories
+    )
     {
         var pkgList = packages.ToList();
 
-        var packageRefs = string.Concat(pkgList.Select(p =>
-            p.Version is null
-                ? $"\n    <PackageReference Include=\"{p.Name}\" />"
-                : $"\n    <PackageReference Include=\"{p.Name}\" Version=\"{p.Version}\" />"));
+        var packageRefs = string.Concat(
+            pkgList.Select(p =>
+                p.Version is null
+                    ? $"\n    <PackageReference Include=\"{p.Name}\" />"
+                    : $"\n    <PackageReference Include=\"{p.Name}\" Version=\"{p.Version}\" />"
+            )
+        );
 
-        var dllRefItems = string.Concat(dllRefs.Select(dll =>
-            $"\n    <Reference Include=\"{Path.GetFileNameWithoutExtension(dll)}\">" +
-            $"\n      <HintPath>refs/{Path.GetFileName(dll)}</HintPath>" +
-            $"\n    </Reference>"));
+        var dllRefItems = string.Concat(
+            dllRefs.Select(dll =>
+                $"\n    <Reference Include=\"{Path.GetFileNameWithoutExtension(dll)}\">"
+                + $"\n      <HintPath>refs/{Path.GetFileName(dll)}</HintPath>"
+                + $"\n    </Reference>"
+            )
+        );
 
-        var buildCsItem = hasBuildCs
-            ? "\n    <Compile Include=\"../Build.cs\" />"
-            : "";
+        var buildCsItem = hasBuildCs ? "\n    <Compile Include=\"../Build.cs\" />" : "";
 
-        var sourceDirItems = string.Concat(sourceDirectories.SelectMany(dir =>
-            new[]
-            {
-                $"\n    <Compile Include=\"{dir.Replace('\\', '/')}/**/*.cs\" />",
-                $"\n    <Content Include=\"{dir.Replace('\\', '/')}/**/*.razor\" />",
-            }));
+        var sourceDirItems = string.Concat(
+            sourceDirectories.SelectMany(dir =>
+                new[]
+                {
+                    $"\n    <Compile Include=\"{dir.Replace('\\', '/')}/**/*.cs\" />",
+                    $"\n    <Content Include=\"{dir.Replace('\\', '/')}/**/*.razor\" />",
+                }
+            )
+        );
 
         var csproj = $"""
             <Project Sdk="Microsoft.NET.Sdk.Razor">
@@ -122,7 +130,10 @@ public sealed class ScaffoldGenerator
         entries.Add(
             new SourceFile("_Imports.razor", Templates.Imports(options.PackageUsings).AsMemory())
         );
-        entries.Add(new HostPage(Templates.IndexHtml(head).AsMemory()));
+        var hotReloadScript = options.HotReloadPort is int port
+            ? Templates.HotReloadScript(port)
+            : null;
+        entries.Add(new HostPage(Templates.IndexHtml(head, hotReloadScript).AsMemory()));
 
         return new ScaffoldContent(entries);
     }

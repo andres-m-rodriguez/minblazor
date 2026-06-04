@@ -34,7 +34,8 @@ public sealed class ScaffoldStep : IPipelineStep
             AppInfo.BlazorPackageVersion,
             AppInfo.DefaultPort,
             HasDependencies: File.Exists(Path.Combine(sourceDir, DependenciesFile)),
-            PackageUsings: packageUsings
+            PackageUsings: packageUsings,
+            HotReloadPort: context.HotReload ? context.Port : null
         );
 
         var content = new ScaffoldGenerator().Generate(

@@ -8,4 +8,5 @@ public enum NodeKind
     ComponentSelfClose,
     HostTag,
     Directive,
+    StyleBlock,
 }

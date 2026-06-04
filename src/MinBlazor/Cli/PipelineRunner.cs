@@ -17,9 +17,14 @@ public sealed class PipelineRunner(IOutput output)
         new ServeStep(output),
     ];
 
-    public Result RunUpTo(PipelineStep target, PipelineContext context)
+    public Result RunUpTo(
+        PipelineStep target,
+        PipelineContext context,
+        IReadOnlySet<PipelineStep>? skip = null
+    )
     {
-        foreach (var step in _steps.Where(s => s.Step <= target))
+        var steps = _steps.Where(s => s.Step <= target && (skip is null || !skip.Contains(s.Step)));
+        foreach (var step in steps)
         {
             if (step.StartMessage is not null)
                 output.Info(step.StartMessage);
@@ -41,4 +46,3 @@ public sealed class PipelineRunner(IOutput output)
         return Result.Ok();
     }
 }
-

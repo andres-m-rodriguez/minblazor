@@ -95,7 +95,36 @@ internal static class Templates
         return $"namespace {RootNamespace};\n\npublic static class BuildOptions\n{{\n{consts}}}\n";
     }
 
-    public static string IndexHtml(string head) =>
+    public static string HotReloadScript(int port) =>
+        $$"""
+            <script>
+            const _mbws = new WebSocket('ws://localhost:{{port}}/_minblazor/ws');
+            _mbws.onmessage = e => {
+              const msg = JSON.parse(e.data);
+              if (msg.type === 'rebuild-started' || msg.type === 'build-failed') {
+                let el = document.getElementById('__mb_hrl__');
+                if (!el) {
+                  el = document.createElement('div');
+                  el.id = '__mb_hrl__';
+                  el.style.cssText = 'position:fixed;bottom:1rem;right:1rem;background:#18181b;color:#fff;padding:.35rem .75rem;border-radius:6px;font:13px/1.5 monospace;z-index:99999;box-shadow:0 2px 8px rgba(0,0,0,.4);';
+                  document.body.appendChild(el);
+                }
+                el.style.background = msg.type === 'build-failed' ? '#b91c1c' : '#18181b';
+                el.textContent = msg.type === 'build-failed' ? 'Compiler error' : 'Rebuilding...';
+                return;
+              }
+              if (msg.type === 'reload') { location.reload(); return; }
+              if (msg.type === 'css') {
+                let s = document.getElementById('__mb_live__');
+                if (!s) { s = document.createElement('style'); s.id = '__mb_live__'; document.head.appendChild(s); }
+                s.textContent = msg.content;
+              }
+            };
+            _mbws.onclose = () => setTimeout(() => location.reload(), 500);
+            </script>
+            """;
+
+    public static string IndexHtml(string head, string? hotReloadScript = null) =>
         $$"""
             <!DOCTYPE html>
             <html lang="en">
@@ -127,6 +156,7 @@ internal static class Templates
                 </div>
 
                 <script src="_framework/blazor.webassembly.js"></script>
+                {{hotReloadScript}}
             </body>
 
             </html>
