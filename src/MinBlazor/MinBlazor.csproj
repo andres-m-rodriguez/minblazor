@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MinBlazor.Core\MinBlazor.Core.csproj" />
+    <ProjectReference Include="..\MinBlazor.Diff\MinBlazor.Diff.csproj" />
     <ProjectReference Include="..\MinBlazor.Parser\MinBlazor.Parser.csproj" />
     <ProjectReference Include="..\MinBlazor.Compiler\MinBlazor.Compiler.csproj" />
     <ProjectReference Include="..\MinBlazor.Build\MinBlazor.Build.csproj" />

@@ -1,4 +1,4 @@
-namespace MinBlazor.Parser;
+namespace MinBlazor.Diff;
 
 public abstract record RazorChange
 {

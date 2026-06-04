@@ -60,6 +60,7 @@ public sealed class ShadowStep : IPipelineStep
         Directory.CreateDirectory(shadowFolder);
         Directory.CreateDirectory(refsFolder);
         AddToGitignore(sourceDir);
+        File.WriteAllText(Path.Combine(shadowFolder, ".gitignore"), "*\n");
 
         CopyDlls(dllPaths, refsFolder);
 

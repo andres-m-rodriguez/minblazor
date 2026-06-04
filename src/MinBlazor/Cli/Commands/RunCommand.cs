@@ -1,3 +1,4 @@
+using MinBlazor.Diff;
 using MinBlazor.Models;
 using MinBlazor.Parser;
 using MinBlazor.Services;

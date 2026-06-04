@@ -1,4 +1,6 @@
-namespace MinBlazor.Parser;
+using MinBlazor.Parser;
+
+namespace MinBlazor.Diff;
 
 public static class RazorDiff
 {
@@ -21,8 +23,7 @@ public static class RazorDiff
 
     private static bool NodesEqual(IReadOnlyList<RazorNode> a, IReadOnlyList<RazorNode> b)
     {
-        if (a.Count != b.Count)
-            return false;
+        if (a.Count != b.Count) return false;
         for (int i = 0; i < a.Count; i++)
             if (a[i].Kind != b[i].Kind || !a[i].Text.Span.SequenceEqual(b[i].Text.Span))
                 return false;
@@ -33,11 +34,9 @@ public static class RazorDiff
     {
         var span = styleBlock.Span;
         var openEnd = span.IndexOf('>');
-        if (openEnd < 0)
-            return string.Empty;
+        if (openEnd < 0) return string.Empty;
         var closeStart = span.LastIndexOf('<');
-        if (closeStart <= openEnd)
-            return string.Empty;
+        if (closeStart <= openEnd) return string.Empty;
         return span.Slice(openEnd + 1, closeStart - openEnd - 1).Trim().ToString();
     }
 }
